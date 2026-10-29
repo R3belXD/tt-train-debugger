@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TT Train Conductor Debugger</title>
+
 <style>
 :root {
   --panel: rgba(20, 21, 29, .96);
@@ -14,7 +15,9 @@
   --muted: #a8adbd;
   --accent: #b9a5ff;
 }
+
 * { box-sizing: border-box; }
+
 html, body {
   margin: 0 !important;
   padding: 0 !important;
@@ -26,9 +29,11 @@ html, body {
   font: 12px/1.35 system-ui, sans-serif;
   overflow: hidden;
 }
+
 html, body, #app {
   background: transparent !important;
 }
+
 main {
   position: fixed;
   top: 8px;
@@ -42,12 +47,14 @@ main {
   gap: 6px;
   scrollbar-width: thin;
 }
+
 header, .panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 8px;
 }
+
 header {
   display: flex;
   align-items: center;
@@ -58,10 +65,24 @@ header {
   user-select: none;
   touch-action: none;
 }
+
 h1 { font-size: 13px; margin: 0; }
-h2 { font-size: 12px; margin: 0 0 7px; color: var(--accent); }
+
+h2 {
+  font-size: 12px;
+  margin: 0 0 7px;
+  color: var(--accent);
+}
+
 p { margin: 4px 0; color: var(--muted); }
-.row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+
+.row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 button, select {
   background: var(--panel2);
   color: var(--text);
@@ -70,9 +91,21 @@ button, select {
   padding: 5px 7px;
   font: inherit;
 }
+
 button { cursor: pointer; }
+
 button:hover { border-color: var(--accent); }
-button.primary { background: #44376d; border-color: #7562b2; }
+
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+button.primary {
+  background: #44376d;
+  border-color: #7562b2;
+}
+
 .badge {
   padding: 3px 6px;
   border-radius: 99px;
@@ -84,16 +117,45 @@ button.primary { background: #44376d; border-color: #7562b2; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
 }
-.metric { background: var(--panel2); padding: 6px; border-radius: 7px; min-width: 0; }
-.metric label { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; }
-.metric strong { display: block; font-size: 14px; overflow-wrap: anywhere; margin-top: 2px; }
-.metric small { color: var(--muted); font-size: 9px; }
-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+
+.metric {
+  background: var(--panel2);
+  padding: 6px;
+  border-radius: 7px;
+  min-width: 0;
+}
+
+.metric label {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.metric strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+}
+
+.metric small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
 th, td {
   text-align: left;
   padding: 5px 4px;
@@ -101,8 +163,14 @@ th, td {
   vertical-align: top;
   overflow-wrap: anywhere;
 }
+
 th { color: var(--muted); }
-.scroll { max-height: 220px; overflow: auto; }
+
+.scroll {
+  max-height: 220px;
+  overflow: auto;
+}
+
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -113,24 +181,47 @@ pre {
   max-height: 180px;
   overflow: auto;
 }
+
 .note { font-size: 10px; }
-body.compact main { width: min(270px, calc(100vw - 16px)); }
-body.compact .detail { display: none !important; }
-body.minimized main { width: 220px; max-height: none; overflow: visible; }
+
+body.compact main {
+  width: min(270px, calc(100vw - 16px));
+}
+
+body.compact .detail {
+  display: none !important;
+}
+
+body.minimized main {
+  width: 220px;
+  max-height: none;
+  overflow: visible;
+}
+
 body.minimized main > .panel,
-body.minimized main > .detail { display: none !important; }
+body.minimized main > .detail {
+  display: none !important;
+}
+
 @media (max-width: 400px) {
-  main { width: calc(100vw - 12px); right: 6px; top: 6px; }
+  main {
+    width: calc(100vw - 12px);
+    right: 6px;
+    top: 6px;
+  }
 }
 </style>
 </head>
+
 <body>
 <main id="app">
+
   <header id="dragHeader">
     <div>
       <h1>🚆 Train Debugger</h1>
       <p>Drag this header to move</p>
     </div>
+
     <div class="row">
       <span id="connection" class="badge">Waiting for data</span>
       <button id="compactBtn">Compact</button>
@@ -140,21 +231,56 @@ body.minimized main > .detail { display: none !important; }
 
   <section class="panel">
     <h2>Live Train Data</h2>
+
     <div class="grid">
-      <div class="metric"><label>Speed (raw)</label><strong id="speed">—</strong><small>Units unconfirmed</small></div>
-      <div class="metric"><label>Heading</label><strong id="heading">—</strong></div>
-      <div class="metric"><label>Position X</label><strong id="x">—</strong></div>
-      <div class="metric"><label>Position Y</label><strong id="y">—</strong></div>
-      <div class="metric"><label>Vehicle</label><strong id="vehicle">—</strong></div>
-      <div class="metric"><label>Job</label><strong id="job">—</strong></div>
-      <div class="metric"><label>Zone / Street</label><strong id="zone">—</strong></div>
-      <div class="metric"><label>Update rate</label><strong id="rate">—</strong></div>
+      <div class="metric">
+        <label>Speed (raw)</label>
+        <strong id="speed">—</strong>
+        <small>Units unconfirmed</small>
+      </div>
+
+      <div class="metric">
+        <label>Heading</label>
+        <strong id="heading">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Position X</label>
+        <strong id="x">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Position Y</label>
+        <strong id="y">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Vehicle</label>
+        <strong id="vehicle">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Job</label>
+        <strong id="job">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Zone / Street</label>
+        <strong id="zone">—</strong>
+      </div>
+
+      <div class="metric">
+        <label>Update rate</label>
+        <strong id="rate">—</strong>
+      </div>
     </div>
+
     <p class="note">Raw values received from the game.</p>
   </section>
 
   <section class="panel detail">
     <h2>Capture Controls</h2>
+
     <div class="row">
       <button class="primary" id="requestBtn">Request key data</button>
       <button id="fullBtn">Request full cache</button>
@@ -163,14 +289,30 @@ body.minimized main > .detail { display: none !important; }
       <button id="exportTxtBtn">Export TXT</button>
       <button id="copyBtn">Copy status</button>
     </div>
-    <p class="note">Export the log to analyze train speed, position, route data, and braking behavior.</p>
+
+    <p class="note">
+      Export the log to analyze train speed, position, route data, and braking behavior.
+      Exports are size-limited to help protect game performance.
+    </p>
+
     <div class="row">
-      <label><input id="logAll" type="checkbox" checked> Log changes</label>
-      <label><input id="logMotion" type="checkbox" checked> Record movement</label>
-      <label>Rows
+      <label>
+        <input id="logAll" type="checkbox" checked>
+        Log changes
+      </label>
+
+      <label>
+        <input id="logMotion" type="checkbox" checked>
+        Record movement
+      </label>
+
+      <label>
+        Rows
         <select id="maxRows">
-          <option>100</option><option selected>300</option>
-          <option>600</option><option>1000</option>
+          <option>100</option>
+          <option selected>300</option>
+          <option>600</option>
+          <option>1000</option>
         </select>
       </label>
     </div>
@@ -178,10 +320,22 @@ body.minimized main > .detail { display: none !important; }
 
   <section class="panel detail">
     <h2>Current Data Values</h2>
+
     <div class="scroll">
       <table>
-        <thead><tr><th>Key</th><th>Value</th><th>Updates</th></tr></thead>
-        <tbody id="values"><tr><td colspan="3">Waiting for game data…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+            <th>Updates</th>
+          </tr>
+        </thead>
+
+        <tbody id="values">
+          <tr>
+            <td colspan="3">Waiting for game data…</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </section>
@@ -193,13 +347,27 @@ body.minimized main > .detail { display: none !important; }
 
   <section class="panel detail">
     <h2>Recent Changes</h2>
+
     <div class="scroll">
       <table>
-        <thead><tr><th>Time</th><th>Key</th><th>Old</th><th>New</th></tr></thead>
-        <tbody id="log"><tr><td colspan="4">No changes yet.</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Key</th>
+            <th>Old</th>
+            <th>New</th>
+          </tr>
+        </thead>
+
+        <tbody id="log">
+          <tr>
+            <td colspan="4">No changes yet.</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </section>
+
 </main>
 
 <script>
@@ -210,9 +378,11 @@ body.minimized main > .detail { display: none !important; }
   const counts = Object.create(null);
   const changes = [];
   const motion = [];
+
   let lastMotion = '';
   let motionTimes = [];
   let lastMessageAt = 0;
+
   const $ = id => document.getElementById(id);
 
   const knownKeys = [
@@ -227,15 +397,23 @@ body.minimized main > .detail { display: none !important; }
 
   function fmt(value) {
     if (value === undefined) return '—';
-    if (typeof value === 'string') return value;
-    try { return JSON.stringify(value); }
-    catch (_) { return String(value); }
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch (_) {
+      return String(value);
+    }
   }
 
   function display(id, value) {
     $(id).textContent =
       value === undefined || value === null || value === ''
-        ? '—' : String(value);
+        ? '—'
+        : String(value);
   }
 
   function sendCommand(type, args = {}) {
@@ -244,127 +422,239 @@ body.minimized main > .detail { display: none !important; }
     }
   }
 
+  // Compact view.
   $('compactBtn').addEventListener('click', () => {
     document.body.classList.toggle('compact');
+
     $('compactBtn').textContent =
-      document.body.classList.contains('compact') ? 'Details' : 'Compact';
+      document.body.classList.contains('compact')
+        ? 'Details'
+        : 'Compact';
   });
 
+  // Minimize view.
   $('minBtn').addEventListener('click', () => {
     document.body.classList.toggle('minimized');
+
     $('minBtn').textContent =
-      document.body.classList.contains('minimized') ? '+' : '−';
+      document.body.classList.contains('minimized')
+        ? '+'
+        : '−';
   });
 
+  // Draggable header.
   const header = $('dragHeader');
+
   let dragging = false;
-  let startX = 0, startY = 0, originX = 0, originY = 0;
+  let startX = 0;
+  let startY = 0;
+  let originX = 0;
+  let originY = 0;
 
   header.addEventListener('pointerdown', event => {
     if (event.target.closest('button')) return;
+
     const rect = $('app').getBoundingClientRect();
+
     dragging = true;
     startX = event.clientX;
     startY = event.clientY;
     originX = rect.left;
     originY = rect.top;
-    try { header.setPointerCapture(event.pointerId); } catch (_) {}
+
+    try {
+      header.setPointerCapture(event.pointerId);
+    } catch (_) {}
   });
 
   header.addEventListener('pointermove', event => {
     if (!dragging) return;
+
     const main = $('app');
-    const x = Math.max(0, Math.min(
-      window.innerWidth - main.offsetWidth,
-      originX + event.clientX - startX
-    ));
-    const y = Math.max(0, Math.min(
-      window.innerHeight - 36,
-      originY + event.clientY - startY
-    ));
+
+    const x = Math.max(
+      0,
+      Math.min(
+        window.innerWidth - main.offsetWidth,
+        originX + event.clientX - startX
+      )
+    );
+
+    const y = Math.max(
+      0,
+      Math.min(
+        window.innerHeight - 36,
+        originY + event.clientY - startY
+      )
+    );
+
     main.style.left = x + 'px';
     main.style.top = y + 'px';
     main.style.right = 'auto';
   });
 
-  header.addEventListener('pointerup', () => dragging = false);
-  header.addEventListener('pointercancel', () => dragging = false);
+  header.addEventListener('pointerup', () => {
+    dragging = false;
+  });
+
+  header.addEventListener('pointercancel', () => {
+    dragging = false;
+  });
 
   function updateSnapshot() {
     display('speed', state.speed);
     display('heading', state.pos_h);
-    display('x', typeof state.pos_x === 'number' ? state.pos_x.toFixed(2) : state.pos_x);
-    display('y', typeof state.pos_y === 'number' ? state.pos_y.toFixed(2) : state.pos_y);
+
+    display(
+      'x',
+      typeof state.pos_x === 'number'
+        ? state.pos_x.toFixed(2)
+        : state.pos_x
+    );
+
+    display(
+      'y',
+      typeof state.pos_y === 'number'
+        ? state.pos_y.toFixed(2)
+        : state.pos_y
+    );
+
     display('vehicle', state.vehicleName || state.vehicle);
-    display('job', state.job_title || state.job_name || state.job);
-    display('zone', [state.zoneName || state.zone, state.street].filter(Boolean).join(' / '));
+
+    display(
+      'job',
+      state.job_title || state.job_name || state.job
+    );
+
+    display(
+      'zone',
+      [state.zoneName || state.zone, state.street]
+        .filter(Boolean)
+        .join(' / ')
+    );
 
     const elapsed = motionTimes.length > 1
-      ? motionTimes.length / ((motionTimes[motionTimes.length - 1] - motionTimes[0]) / 1000)
+      ? motionTimes.length /
+        ((motionTimes[motionTimes.length - 1] -
+          motionTimes[0]) / 1000)
       : 0;
-    display('rate', elapsed > 0 ? elapsed.toFixed(1) + '/s' : '—');
 
-    if (state.status !== undefined) $('status').textContent = fmt(state.status);
-    $('connection').textContent = lastMessageAt ? 'Receiving data' : 'Waiting for data';
+    display(
+      'rate',
+      elapsed > 0 ? elapsed.toFixed(1) + '/s' : '—'
+    );
+
+    if (state.status !== undefined) {
+      $('status').textContent = fmt(state.status).slice(0, 5000);
+    }
+
+    $('connection').textContent =
+      lastMessageAt ? 'Receiving data' : 'Waiting for data';
   }
 
+  // Render current data.
   function renderValues() {
     const tbody = $('values');
     tbody.replaceChildren();
 
     const keys = Object.keys(state).sort((a, b) => {
       const priority = key =>
-        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key) ? 0 : 1;
+        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key)
+          ? 0
+          : 1;
+
       return priority(a) - priority(b) || a.localeCompare(b);
     });
 
     if (!keys.length) {
-      tbody.innerHTML = '<tr><td colspan="3">Waiting for game data…</td></tr>';
-      return;
-    }
-
-    for (const key of keys) {
       const tr = document.createElement('tr');
-      for (const value of [key, fmt(state[key]).slice(0, 200), counts[key] || 0]) {
-        const td = document.createElement('td');
-        td.textContent = String(value);
-        tr.appendChild(td);
-      }
+      const td = document.createElement('td');
+
+      td.colSpan = 3;
+      td.textContent = 'Waiting for game data…';
+
+      tr.appendChild(td);
       tbody.appendChild(tr);
-    }
-  }
-
-  function renderChanges() {
-    const tbody = $('log');
-    tbody.replaceChildren();
-
-    if (!changes.length) {
-      tbody.innerHTML = '<tr><td colspan="4">No changes yet.</td></tr>';
       return;
     }
 
-    for (const item of changes.slice().reverse()) {
+    // Limit rendered rows to keep the UI responsive.
+    for (const key of keys.slice(0, 300)) {
       const tr = document.createElement('tr');
+
       for (const value of [
-        new Date(item.ts).toLocaleTimeString(),
-        item.key, item.old, item.value
+        key,
+        fmt(state[key]).slice(0, 200),
+        counts[key] || 0
       ]) {
         const td = document.createElement('td');
         td.textContent = String(value);
         tr.appendChild(td);
       }
+
+      tbody.appendChild(tr);
+    }
+
+    if (keys.length > 300) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+
+      td.colSpan = 3;
+      td.textContent =
+        `${keys.length - 300} additional keys omitted from display`;
+
+      tr.appendChild(td);
       tbody.appendChild(tr);
     }
   }
 
+  // Render recent changes.
+  function renderChanges() {
+    const tbody = $('log');
+    tbody.replaceChildren();
+
+    if (!changes.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+
+      td.colSpan = 4;
+      td.textContent = 'No changes yet.';
+
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    for (const item of changes.slice().reverse()) {
+      const tr = document.createElement('tr');
+
+      for (const value of [
+        new Date(item.ts).toLocaleTimeString(),
+        item.key,
+        item.old,
+        item.value
+      ]) {
+        const td = document.createElement('td');
+        td.textContent = String(value);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  // Record movement samples.
   function recordMotion(ts) {
     const x = Number(state.pos_x);
     const y = Number(state.pos_y);
     const speed = Number(state.speed);
+
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
     const signature = [x, y, speed].join('|');
+
     if (signature === lastMotion) return;
+
     lastMotion = signature;
 
     if ($('logMotion').checked) {
@@ -376,19 +666,30 @@ body.minimized main > .detail { display: none !important; }
         pos_z: Number(state.pos_z) || null,
         pos_h: Number(state.pos_h) || null
       });
-      while (motion.length > 5000) motion.shift();
+
+      while (motion.length > 5000) {
+        motion.shift();
+      }
     }
 
     motionTimes.push(ts);
     motionTimes = motionTimes.filter(t => ts - t < 10000);
   }
 
+  // Receive game data.
   window.addEventListener('message', event => {
     if (event.source !== window.parent) return;
+
     const payload = event.data;
-    const data = payload && typeof payload === 'object' &&
-      payload.data && typeof payload.data === 'object'
-      ? payload.data : null;
+
+    const data =
+      payload &&
+      typeof payload === 'object' &&
+      payload.data &&
+      typeof payload.data === 'object'
+        ? payload.data
+        : null;
+
     if (!data || Array.isArray(data)) return;
 
     const ts = Date.now();
@@ -396,123 +697,324 @@ body.minimized main > .detail { display: none !important; }
 
     for (const [key, value] of Object.entries(data)) {
       const old = state[key];
-      const exists = Object.prototype.hasOwnProperty.call(state, key);
+
+      const exists =
+        Object.prototype.hasOwnProperty.call(state, key);
+
       state[key] = value;
       counts[key] = (counts[key] || 0) + 1;
 
-      if ((!exists || fmt(old) !== fmt(value)) && $('logAll').checked) {
+      if (
+        (!exists || fmt(old) !== fmt(value)) &&
+        $('logAll').checked
+      ) {
         changes.push({
-          ts, key,
-          old: exists ? fmt(old).slice(0, 100) : '(first value)',
+          ts,
+          key,
+          old: exists
+            ? fmt(old).slice(0, 100)
+            : '(first value)',
           value: fmt(value).slice(0, 100)
         });
       }
     }
 
     const max = Number($('maxRows').value) || 300;
-    while (changes.length > max) changes.shift();
+
+    while (changes.length > max) {
+      changes.shift();
+    }
+
     recordMotion(ts);
     updateSnapshot();
     renderValues();
     renderChanges();
   });
 
-  $('requestBtn').addEventListener('click', () =>
-    sendCommand('getNamedData', { keys: knownKeys })
-  );
-
-  $('fullBtn').addEventListener('click', () => {
-    if (confirm('Request all cached data? Continue?')) sendCommand('getData');
+  // Request selected game data.
+  $('requestBtn').addEventListener('click', () => {
+    sendCommand('getNamedData', { keys: knownKeys });
   });
 
+  // Request the full cache only after confirmation.
+  $('fullBtn').addEventListener('click', () => {
+    if (confirm('Request all cached data? Continue?')) {
+      sendCommand('getData');
+    }
+  });
+
+  // Clear collected logs.
   $('clearBtn').addEventListener('click', () => {
     changes.length = 0;
     motion.length = 0;
+    lastMotion = '';
+    motionTimes = [];
+
     renderChanges();
+    updateSnapshot();
   });
 
+  // Copy current status.
   $('copyBtn').addEventListener('click', async () => {
     const value = fmt(state.status ?? '(No status received)');
+
     try {
       await navigator.clipboard.writeText(value);
+
       $('copyBtn').textContent = 'Copied!';
-      setTimeout(() => $('copyBtn').textContent = 'Copy status', 1200);
+
+      setTimeout(() => {
+        $('copyBtn').textContent = 'Copy status';
+      }, 1200);
     } catch (_) {
       $('status').textContent = value;
     }
   });
 
+  // Download helper with error handling.
   function downloadFile(filename, content, type) {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    let url;
+
+    try {
+      const blob = new Blob([content], { type });
+      url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Some embedded browsers need more time before revocation.
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (_) {}
+      }, 10000);
+
+      return true;
+    } catch (error) {
+      console.error('Train Debugger export failed:', error);
+
+      $('connection').textContent = 'Export failed';
+
+      if (url) {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (_) {}
+      }
+
+      return false;
+    }
+  }
+
+  // Build a bounded, safe copy of nested game data.
+  function safeValue(
+    value,
+    depth = 0,
+    budget = { count: 0 },
+    seen = new WeakSet()
+  ) {
+    if (++budget.count > 5000) {
+      return '[Export limit reached]';
+    }
+
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'string') {
+      return value.length > 1000
+        ? value.slice(0, 1000) + '…[truncated]'
+        : value;
+    }
+
+    if (
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return value;
+    }
+
+    if (typeof value !== 'object') {
+      return String(value);
+    }
+
+    if (depth >= 3) {
+      return '[Nested data omitted]';
+    }
+
+    if (seen.has(value)) {
+      return '[Circular reference]';
+    }
+
+    seen.add(value);
+
+    if (Array.isArray(value)) {
+      return value.slice(0, 100).map(item =>
+        safeValue(item, depth + 1, budget, seen)
+      );
+    }
+
+    const result = {};
+
+    let keys;
+
+    try {
+      keys = Object.keys(value).slice(0, 100);
+    } catch (_) {
+      return '[Unreadable object]';
+    }
+
+    for (const key of keys) {
+      try {
+        result[key] = safeValue(
+          value[key],
+          depth + 1,
+          budget,
+          seen
+        );
+      } catch (_) {
+        result[key] = '[Unreadable value]';
+      }
+
+      if (budget.count > 5000) break;
+    }
+
+    return result;
   }
 
   function exportData() {
     return {
       exportedAt: new Date().toISOString(),
-      snapshot: state,
-      changeLog: changes,
-      motionSamples: motion
+      snapshot: safeValue(state),
+      changeLog: changes.slice(-1000),
+      motionSamples: motion.slice(-2000),
+      note: 'Export is size-limited to help prevent game freezes.'
     };
   }
 
+  // Let the interface update before preparing an export.
+  function runExport(button, filename, type, buildContent) {
+    button.disabled = true;
+    const oldText = button.textContent;
+
+    button.textContent = 'Preparing…';
+    $('connection').textContent = 'Preparing export…';
+
+    setTimeout(() => {
+      try {
+        const content = buildContent();
+
+        const success = downloadFile(
+          filename,
+          content,
+          type
+        );
+
+        button.textContent = success
+          ? 'Export started!'
+          : 'Export failed';
+
+        $('connection').textContent = success
+          ? 'Export requested'
+          : 'Export failed';
+      } catch (error) {
+        console.error('Train Debugger export failed:', error);
+
+        button.textContent = 'Export failed';
+        $('connection').textContent = 'Export failed';
+      }
+
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = oldText;
+      }, 2000);
+    }, 50);
+  }
+
+  // Export JSON.
   $('exportBtn').addEventListener('click', () => {
-    downloadFile(
+    runExport(
+      $('exportBtn'),
       'tt-train-debugger.json',
-      JSON.stringify(exportData(), null, 2),
-      'application/json'
+      'application/json',
+      () => JSON.stringify(exportData())
     );
   });
 
+  // Export TXT.
   $('exportTxtBtn').addEventListener('click', () => {
-    const data = exportData();
-    const lines = [
-      'TRANSPORT TYCOON TRAIN DEBUGGER',
-      'Exported: ' + data.exportedAt,
-      '',
-      'CURRENT DATA'
-    ];
-
-    for (const key of Object.keys(state).sort()) {
-      lines.push(key + ': ' + fmt(state[key]));
-    }
-
-    lines.push('', 'RECENT CHANGES');
-
-    for (const item of changes) {
-      lines.push(
-        new Date(item.ts).toLocaleTimeString() + ' | ' +
-        item.key + ' | ' + item.old + ' -> ' + item.value
-      );
-    }
-
-    lines.push('', 'MOVEMENT SAMPLES', 'time,speed,pos_x,pos_y,pos_z,pos_h');
-
-    for (const sample of motion) {
-      lines.push([
-        sample.time, sample.speed ?? '', sample.pos_x, sample.pos_y,
-        sample.pos_z ?? '', sample.pos_h ?? ''
-      ].join(','));
-    }
-
-    downloadFile(
+    runExport(
+      $('exportTxtBtn'),
       'tt-train-debugger-log.txt',
-      lines.join('\n'),
-      'text/plain;charset=utf-8'
+      'text/plain;charset=utf-8',
+      () => {
+        const data = exportData();
+        const lines = [
+          'TRANSPORT TYCOON TRAIN DEBUGGER',
+          'Exported: ' + data.exportedAt,
+          '',
+          'CURRENT DATA'
+        ];
+
+        for (const key of Object.keys(data.snapshot).sort()) {
+          lines.push(
+            key + ': ' + fmt(data.snapshot[key])
+          );
+        }
+
+        lines.push('', 'RECENT CHANGES');
+
+        for (const item of data.changeLog) {
+          lines.push(
+            new Date(item.ts).toLocaleTimeString() +
+            ' | ' + item.key +
+            ' | ' + item.old +
+            ' -> ' + item.value
+          );
+        }
+
+        lines.push(
+          '',
+          'MOVEMENT SAMPLES',
+          'time,speed,pos_x,pos_y,pos_z,pos_h'
+        );
+
+        for (const sample of data.motionSamples) {
+          lines.push([
+            sample.time,
+            sample.speed ?? '',
+            sample.pos_x,
+            sample.pos_y,
+            sample.pos_z ?? '',
+            sample.pos_h ?? ''
+          ].join(','));
+        }
+
+        lines.push('', data.note);
+
+        return lines.join('\n');
+      }
     );
   });
 
-  $('maxRows').addEventListener('change', renderChanges);
+  $('maxRows').addEventListener('change', () => {
+    const max = Number($('maxRows').value) || 300;
 
-  // Startup request; no missing pinBtn reference.
+    while (changes.length > max) {
+      changes.shift();
+    }
+
+    renderChanges();
+  });
+
+  // Startup request.
   sendCommand('getNamedData', { keys: knownKeys });
+
 })();
 </script>
 </body>
