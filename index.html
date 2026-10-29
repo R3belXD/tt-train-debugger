@@ -4,1017 +4,673 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TT Train Conductor Debugger</title>
-
+<title>TT Train Braking Assistant</title>
 <style>
 :root {
-  --panel: rgba(20, 21, 29, .96);
-  --panel2: rgba(36, 39, 51, .97);
-  --line: #45485a;
-  --text: #f3f3f7;
-  --muted: #a8adbd;
-  --accent: #b9a5ff;
+  --panel:rgba(20,21,29,.96);
+  --panel2:rgba(36,39,51,.97);
+  --line:#45485a;
+  --text:#f3f3f7;
+  --muted:#a8adbd;
+  --accent:#b9a5ff;
 }
-
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100%;
-  height: 100%;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: var(--text);
-  font: 12px/1.35 system-ui, sans-serif;
-  overflow: hidden;
+*{box-sizing:border-box}
+html,body{
+  margin:0!important;padding:0!important;width:100%;height:100%;
+  background:transparent!important;color:var(--text);
+  font:12px/1.4 system-ui,sans-serif;overflow:hidden
 }
-
-html, body, #app {
-  background: transparent !important;
+main{
+  position:fixed;top:8px;right:8px;
+  width:min(350px,calc(100vw - 16px));
+  max-height:calc(100vh - 16px);overflow:auto;
+  display:grid;gap:6px;scrollbar-width:thin
 }
-
-main {
-  position: fixed;
-  top: 8px;
-  right: 8px;
-  width: min(330px, calc(100vw - 16px));
-  max-height: calc(100vh - 16px);
-  overflow: auto;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 6px;
-  scrollbar-width: thin;
+header,.panel{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:9px;padding:8px
 }
-
-header, .panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 8px;
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:6px;flex-wrap:wrap;cursor:move;user-select:none
 }
-
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  flex-wrap: wrap;
-  cursor: move;
-  user-select: none;
-  touch-action: none;
+h1{font-size:14px;margin:0}
+h2{font-size:12px;margin:0 0 7px;color:var(--accent)}
+p{margin:4px 0;color:var(--muted)}
+.row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+button,select{
+  background:var(--panel2);color:var(--text);
+  border:1px solid var(--line);border-radius:6px;
+  padding:6px 8px;font:inherit
 }
-
-h1 { font-size: 13px; margin: 0; }
-
-h2 {
-  font-size: 12px;
-  margin: 0 0 7px;
-  color: var(--accent);
+button{cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:disabled{opacity:.5}
+.primary{background:#44376d;border-color:#7562b2}
+.danger{background:#612e3c;border-color:#a84e65}
+.badge{
+  padding:3px 6px;border-radius:99px;background:#303341;
+  color:var(--muted);font-size:10px
 }
-
-p { margin: 4px 0; color: var(--muted); }
-
-.row {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  flex-wrap: wrap;
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.metric{background:var(--panel2);padding:7px;border-radius:7px;min-width:0}
+.metric label{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}
+.metric strong{display:block;font-size:14px;overflow-wrap:anywhere;margin-top:2px}
+.metric small{color:var(--muted);font-size:9px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th,td{text-align:left;padding:5px 3px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+th{color:var(--muted)}
+.scroll{max-height:180px;overflow:auto}
+.note{font-size:10px}
+pre{
+  white-space:pre-wrap;overflow-wrap:anywhere;background:#11131a;
+  border:1px solid var(--line);border-radius:6px;padding:7px;
+  max-height:150px;overflow:auto
 }
-
-button, select {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 5px 7px;
-  font: inherit;
-}
-
-button { cursor: pointer; }
-
-button:hover { border-color: var(--accent); }
-
-button:disabled {
-  opacity: .6;
-  cursor: wait;
-}
-
-button.primary {
-  background: #44376d;
-  border-color: #7562b2;
-}
-
-.badge {
-  padding: 3px 6px;
-  border-radius: 99px;
-  background: #303341;
-  color: var(--muted);
-  font-size: 10px;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
-}
-
-.metric {
-  background: var(--panel2);
-  padding: 6px;
-  border-radius: 7px;
-  min-width: 0;
-}
-
-.metric label {
-  display: block;
-  color: var(--muted);
-  font-size: 9px;
-  text-transform: uppercase;
-}
-
-.metric strong {
-  display: block;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-  margin-top: 2px;
-}
-
-.metric small {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
-th, td {
-  text-align: left;
-  padding: 5px 4px;
-  border-bottom: 1px solid var(--line);
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
-
-th { color: var(--muted); }
-
-.scroll {
-  max-height: 220px;
-  overflow: auto;
-}
-
-pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: #11131a;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 7px;
-  max-height: 180px;
-  overflow: auto;
-}
-
-.note { font-size: 10px; }
-
-body.compact main {
-  width: min(270px, calc(100vw - 16px));
-}
-
-body.compact .detail {
-  display: none !important;
-}
-
-body.minimized main {
-  width: 220px;
-  max-height: none;
-  overflow: visible;
-}
-
-body.minimized main > .panel,
-body.minimized main > .detail {
-  display: none !important;
-}
-
-@media (max-width: 400px) {
-  main {
-    width: calc(100vw - 12px);
-    right: 6px;
-    top: 6px;
-  }
+body.compact main{width:min(280px,calc(100vw - 16px))}
+body.compact .detail{display:none!important}
+body.minimized main{width:220px;max-height:none;overflow:visible}
+body.minimized main>.panel{display:none!important}
+@media(max-width:400px){
+  main{width:calc(100vw - 12px);right:6px;top:6px}
 }
 </style>
 </head>
-
 <body>
 <main id="app">
+<header id="dragHeader">
+  <div>
+    <h1>🚆 Train Braking Assistant</h1>
+    <p>Acceleration & stopping-distance tests</p>
+  </div>
+  <div class="row">
+    <span id="connection" class="badge">Waiting for data</span>
+    <button id="compactBtn">Compact</button>
+    <button id="minBtn">−</button>
+  </div>
+</header>
 
-  <header id="dragHeader">
-    <div>
-      <h1>🚆 Train Debugger</h1>
-      <p>Drag this header to move</p>
-    </div>
+<section class="panel">
+  <h2>Live Train Data</h2>
+  <div class="grid">
+    <div class="metric"><label>Speed (raw)</label><strong id="speed">—</strong><small>Units unconfirmed</small></div>
+    <div class="metric"><label>Heading</label><strong id="heading">—</strong></div>
+    <div class="metric"><label>Position X</label><strong id="x">—</strong></div>
+    <div class="metric"><label>Position Y</label><strong id="y">—</strong></div>
+    <div class="metric"><label>Position Z</label><strong id="z">—</strong></div>
+    <div class="metric"><label>Vehicle</label><strong id="vehicle">—</strong></div>
+    <div class="metric"><label>Job</label><strong id="job">—</strong></div>
+    <div class="metric"><label>Zone / Street</label><strong id="zone">—</strong></div>
+  </div>
+</section>
 
-    <div class="row">
-      <span id="connection" class="badge">Waiting for data</span>
-      <button id="compactBtn">Compact</button>
-      <button id="minBtn" title="Minimize">−</button>
-    </div>
-  </header>
+<section class="panel">
+  <h2>Acceleration & Braking Tests</h2>
+  <div class="grid">
+    <div class="metric"><label>Test status</label><strong id="testStatus">Ready</strong></div>
+    <div class="metric"><label>Elapsed time</label><strong id="testTime">—</strong></div>
+    <div class="metric"><label>Distance traveled</label><strong id="testDistance">—</strong><small>Game coordinate units</small></div>
+    <div class="metric"><label>Start → End speed</label><strong id="testSpeeds">—</strong></div>
+  </div>
+  <p id="testMessage" class="note">Waiting for train data.</p>
+  <div class="row">
+    <button class="primary" id="accelBtn">Numpad 7 · Acceleration</button>
+    <button class="primary" id="brakeBtn">Numpad 8 · Braking</button>
+    <button class="danger" id="cancelBtn">Numpad 9 · Cancel</button>
+  </div>
+  <p class="note">
+    Acceleration: start while stopped, then press Numpad 7 again at your target speed.
+    Braking: start while moving, then brake normally. The test ends after a confirmed stop.
+    If speed never reaches zero, use Numpad 9 to cancel.
+  </p>
+  <h2 style="margin-top:10px">Saved Test Results</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Test</th><th>Speed</th><th>Time</th><th>Distance</th></tr></thead>
+      <tbody id="testResults"><tr><td colspan="4">No tests completed.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="row" style="margin-top:7px">
+    <button id="exportTestsBtn">Export test results</button>
+    <button id="clearTestsBtn">Clear test results</button>
+  </div>
+</section>
 
-  <section class="panel">
-    <h2>Live Train Data</h2>
+<section class="panel detail">
+  <h2>Capture Controls</h2>
+  <div class="row">
+    <button class="primary" id="requestBtn">Request key data</button>
+    <button id="fullBtn">Request full cache</button>
+    <button id="clearBtn">Clear log</button>
+    <button id="exportBtn">Export JSON</button>
+    <button id="exportTxtBtn">Export TXT</button>
+    <button id="copyBtn">Copy status</button>
+  </div>
+  <p class="note">Avoid requesting the full cache during driving.</p>
+  <div class="row">
+    <label><input id="logAll" type="checkbox" checked> Log changes</label>
+    <label><input id="logMotion" type="checkbox" checked> Record movement</label>
+    <label>Rows <select id="maxRows"><option>100</option><option selected>300</option><option>600</option><option>1000</option></select></label>
+  </div>
+</section>
 
-    <div class="grid">
-      <div class="metric">
-        <label>Speed (raw)</label>
-        <strong id="speed">—</strong>
-        <small>Units unconfirmed</small>
-      </div>
+<section class="panel detail">
+  <h2>Current Data Values</h2>
+  <div class="scroll">
+    <table><thead><tr><th>Key</th><th>Value</th><th>Updates</th></tr></thead>
+    <tbody id="values"><tr><td colspan="3">Waiting for game data…</td></tr></tbody></table>
+  </div>
+</section>
 
-      <div class="metric">
-        <label>Heading</label>
-        <strong id="heading">—</strong>
-      </div>
+<section class="panel detail">
+  <h2>Route / Status</h2>
+  <pre id="status">No status received yet.</pre>
+</section>
 
-      <div class="metric">
-        <label>Position X</label>
-        <strong id="x">—</strong>
-      </div>
-
-      <div class="metric">
-        <label>Position Y</label>
-        <strong id="y">—</strong>
-      </div>
-
-      <div class="metric">
-        <label>Vehicle</label>
-        <strong id="vehicle">—</strong>
-      </div>
-
-      <div class="metric">
-        <label>Job</label>
-        <strong id="job">—</strong>
-      </div>
-
-      <div class="metric">
-        <label>Zone / Street</label>
-        <strong id="zone">—</strong>
-      </div>
-
-      <div class="metric">
-        <label>Update rate</label>
-        <strong id="rate">—</strong>
-      </div>
-    </div>
-
-    <p class="note">Raw values received from the game.</p>
-  </section>
-
-  <section class="panel detail">
-    <h2>Capture Controls</h2>
-
-    <div class="row">
-      <button class="primary" id="requestBtn">Request key data</button>
-      <button id="fullBtn">Request full cache</button>
-      <button id="clearBtn">Clear log</button>
-      <button id="exportBtn">Export JSON</button>
-      <button id="exportTxtBtn">Export TXT</button>
-      <button id="copyBtn">Copy status</button>
-    </div>
-
-    <p class="note">
-      Export the log to analyze train speed, position, route data, and braking behavior.
-      Exports are size-limited to help protect game performance.
-    </p>
-
-    <div class="row">
-      <label>
-        <input id="logAll" type="checkbox" checked>
-        Log changes
-      </label>
-
-      <label>
-        <input id="logMotion" type="checkbox" checked>
-        Record movement
-      </label>
-
-      <label>
-        Rows
-        <select id="maxRows">
-          <option>100</option>
-          <option selected>300</option>
-          <option>600</option>
-          <option>1000</option>
-        </select>
-      </label>
-    </div>
-  </section>
-
-  <section class="panel detail">
-    <h2>Current Data Values</h2>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Value</th>
-            <th>Updates</th>
-          </tr>
-        </thead>
-
-        <tbody id="values">
-          <tr>
-            <td colspan="3">Waiting for game data…</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="panel detail">
-    <h2>Route / Status</h2>
-    <pre id="status">No status received yet.</pre>
-  </section>
-
-  <section class="panel detail">
-    <h2>Recent Changes</h2>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Key</th>
-            <th>Old</th>
-            <th>New</th>
-          </tr>
-        </thead>
-
-        <tbody id="log">
-          <tr>
-            <td colspan="4">No changes yet.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
+<section class="panel detail">
+  <h2>Recent Changes</h2>
+  <div class="scroll">
+    <table><thead><tr><th>Time</th><th>Key</th><th>Old</th><th>New</th></tr></thead>
+    <tbody id="log"><tr><td colspan="4">No changes yet.</td></tr></tbody></table>
+  </div>
+</section>
 </main>
 
 <script>
 (() => {
-  'use strict';
+'use strict';
 
-  const state = Object.create(null);
-  const counts = Object.create(null);
-  const changes = [];
-  const motion = [];
+const $ = id => document.getElementById(id);
+const state = Object.create(null);
+const counts = Object.create(null);
+const changes = [];
+const motion = [];
+const trainTests = [];
 
-  let lastMotion = '';
-  let motionTimes = [];
-  let lastMessageAt = 0;
+let lastMotion = '';
+let lastMessageAt = 0;
+let activeTest = null;
+let lastTestResult = null;
+let motionTimes = [];
 
-  const $ = id => document.getElementById(id);
+const knownKeys = [
+  'job','job_name','job_title','subjob',
+  'vehicle','vehicleName','vehicleClassName',
+  'speed','rpm','pos_x','pos_y','pos_z','pos_h',
+  'waypoint','waypoint_x','waypoint_y',
+  'status','notification','zone','zoneName','street',
+  'focused','pinned','tabbed','engine','fuel','exp_train_train'
+];
 
-  const knownKeys = [
-    'job', 'job_name', 'job_title', 'subjob',
-    'vehicle', 'vehicleName', 'vehicleClassName',
-    'speed', 'rpm', 'pos_x', 'pos_y', 'pos_z', 'pos_h',
-    'waypoint', 'waypoint_x', 'waypoint_y',
-    'status', 'notification', 'zone', 'zoneName', 'street',
-    'focused', 'pinned', 'tabbed', 'engine', 'fuel',
-    'exp_train_train'
-  ];
+function fmt(value) {
+  if (value === undefined) return '—';
+  if (typeof value === 'string') return value;
+  try { return JSON.stringify(value); }
+  catch (_) { return String(value); }
+}
 
-  function fmt(value) {
-    if (value === undefined) return '—';
+function display(id, value) {
+  $(id).textContent =
+    value === undefined || value === null || value === ''
+      ? '—' : String(value);
+}
 
-    if (typeof value === 'string') {
-      return value;
-    }
-
-    try {
-      return JSON.stringify(value);
-    } catch (_) {
-      return String(value);
-    }
+function sendCommand(type, args = {}) {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({type,...args}, '*');
   }
+}
 
-  function display(id, value) {
-    $(id).textContent =
-      value === undefined || value === null || value === ''
-        ? '—'
-        : String(value);
+$('compactBtn').addEventListener('click', () => {
+  document.body.classList.toggle('compact');
+  $('compactBtn').textContent =
+    document.body.classList.contains('compact') ? 'Details' : 'Compact';
+});
+
+$('minBtn').addEventListener('click', () => {
+  document.body.classList.toggle('minimized');
+  $('minBtn').textContent =
+    document.body.classList.contains('minimized') ? '+' : '−';
+});
+
+// Drag the overlay.
+const header = $('dragHeader');
+let dragging = false, startX = 0, startY = 0, originX = 0, originY = 0;
+
+header.addEventListener('pointerdown', event => {
+  if (event.target.closest('button')) return;
+  const rect = $('app').getBoundingClientRect();
+  dragging = true;
+  startX = event.clientX;
+  startY = event.clientY;
+  originX = rect.left;
+  originY = rect.top;
+  try { header.setPointerCapture(event.pointerId); } catch (_) {}
+});
+
+header.addEventListener('pointermove', event => {
+  if (!dragging) return;
+  const main = $('app');
+  main.style.left = Math.max(0,Math.min(
+    window.innerWidth-main.offsetWidth,
+    originX+event.clientX-startX
+  ))+'px';
+  main.style.top = Math.max(0,Math.min(
+    window.innerHeight-36,
+    originY+event.clientY-startY
+  ))+'px';
+  main.style.right = 'auto';
+});
+
+header.addEventListener('pointerup', () => dragging = false);
+header.addEventListener('pointercancel', () => dragging = false);
+
+function updateSnapshot() {
+  display('speed',state.speed);
+  display('heading',state.pos_h);
+  display('x',state.pos_x);
+  display('y',state.pos_y);
+  display('z',state.pos_z);
+  display('vehicle',state.vehicleName || state.vehicle);
+  display('job',state.job_title || state.job_name || state.job);
+  display('zone',[state.zoneName || state.zone,state.street].filter(Boolean).join(' / '));
+  $('connection').textContent = lastMessageAt ? 'Receiving data' : 'Waiting for data';
+  if (state.status !== undefined) $('status').textContent = fmt(state.status).slice(0,5000);
+}
+
+function renderValues() {
+  const tbody = $('values');
+  tbody.replaceChildren();
+  const keys = Object.keys(state).sort((a,b) => {
+    const priority = key => /^(status|speed|pos_|waypoint|vehicle|job)/.test(key) ? 0 : 1;
+    return priority(a)-priority(b) || a.localeCompare(b);
+  });
+  if (!keys.length) {
+    tbody.innerHTML = '<tr><td colspan="3">Waiting for game data…</td></tr>';
+    return;
   }
-
-  function sendCommand(type, args = {}) {
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type, ...args }, '*');
+  for (const key of keys.slice(0,300)) {
+    const tr = document.createElement('tr');
+    for (const value of [key,fmt(state[key]).slice(0,200),counts[key]||0]) {
+      const td = document.createElement('td');
+      td.textContent = String(value);
+      tr.appendChild(td);
     }
+    tbody.appendChild(tr);
   }
+}
 
-  // Compact view.
-  $('compactBtn').addEventListener('click', () => {
-    document.body.classList.toggle('compact');
-
-    $('compactBtn').textContent =
-      document.body.classList.contains('compact')
-        ? 'Details'
-        : 'Compact';
-  });
-
-  // Minimize view.
-  $('minBtn').addEventListener('click', () => {
-    document.body.classList.toggle('minimized');
-
-    $('minBtn').textContent =
-      document.body.classList.contains('minimized')
-        ? '+'
-        : '−';
-  });
-
-  // Draggable header.
-  const header = $('dragHeader');
-
-  let dragging = false;
-  let startX = 0;
-  let startY = 0;
-  let originX = 0;
-  let originY = 0;
-
-  header.addEventListener('pointerdown', event => {
-    if (event.target.closest('button')) return;
-
-    const rect = $('app').getBoundingClientRect();
-
-    dragging = true;
-    startX = event.clientX;
-    startY = event.clientY;
-    originX = rect.left;
-    originY = rect.top;
-
-    try {
-      header.setPointerCapture(event.pointerId);
-    } catch (_) {}
-  });
-
-  header.addEventListener('pointermove', event => {
-    if (!dragging) return;
-
-    const main = $('app');
-
-    const x = Math.max(
-      0,
-      Math.min(
-        window.innerWidth - main.offsetWidth,
-        originX + event.clientX - startX
-      )
-    );
-
-    const y = Math.max(
-      0,
-      Math.min(
-        window.innerHeight - 36,
-        originY + event.clientY - startY
-      )
-    );
-
-    main.style.left = x + 'px';
-    main.style.top = y + 'px';
-    main.style.right = 'auto';
-  });
-
-  header.addEventListener('pointerup', () => {
-    dragging = false;
-  });
-
-  header.addEventListener('pointercancel', () => {
-    dragging = false;
-  });
-
-  function updateSnapshot() {
-    display('speed', state.speed);
-    display('heading', state.pos_h);
-
-    display(
-      'x',
-      typeof state.pos_x === 'number'
-        ? state.pos_x.toFixed(2)
-        : state.pos_x
-    );
-
-    display(
-      'y',
-      typeof state.pos_y === 'number'
-        ? state.pos_y.toFixed(2)
-        : state.pos_y
-    );
-
-    display('vehicle', state.vehicleName || state.vehicle);
-
-    display(
-      'job',
-      state.job_title || state.job_name || state.job
-    );
-
-    display(
-      'zone',
-      [state.zoneName || state.zone, state.street]
-        .filter(Boolean)
-        .join(' / ')
-    );
-
-    const elapsed = motionTimes.length > 1
-      ? motionTimes.length /
-        ((motionTimes[motionTimes.length - 1] -
-          motionTimes[0]) / 1000)
-      : 0;
-
-    display(
-      'rate',
-      elapsed > 0 ? elapsed.toFixed(1) + '/s' : '—'
-    );
-
-    if (state.status !== undefined) {
-      $('status').textContent = fmt(state.status).slice(0, 5000);
+function renderChanges() {
+  const tbody = $('log');
+  tbody.replaceChildren();
+  if (!changes.length) {
+    tbody.innerHTML = '<tr><td colspan="4">No changes yet.</td></tr>';
+    return;
+  }
+  for (const item of changes.slice().reverse()) {
+    const tr = document.createElement('tr');
+    for (const value of [new Date(item.ts).toLocaleTimeString(),item.key,item.old,item.value]) {
+      const td = document.createElement('td');
+      td.textContent = String(value);
+      tr.appendChild(td);
     }
-
-    $('connection').textContent =
-      lastMessageAt ? 'Receiving data' : 'Waiting for data';
+    tbody.appendChild(tr);
   }
+}
 
-  // Render current data.
-  function renderValues() {
-    const tbody = $('values');
-    tbody.replaceChildren();
+function getSample(ts = Date.now()) {
+  const x = Number(state.pos_x);
+  const y = Number(state.pos_y);
+  const speed = Number(state.speed);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(speed)) return null;
+  return {time:ts,speed,x,y,z:Number(state.pos_z)};
+}
 
-    const keys = Object.keys(state).sort((a, b) => {
-      const priority = key =>
-        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key)
-          ? 0
-          : 1;
+function distanceBetween(a,b) {
+  return Math.hypot(b.x-a.x,b.y-a.y);
+}
 
-      return priority(a) - priority(b) || a.localeCompare(b);
+function recordMotion(ts) {
+  const sample = getSample(ts);
+  if (!sample) return;
+  const signature = [sample.x,sample.y,sample.speed].join('|');
+  if (signature === lastMotion) return;
+  lastMotion = signature;
+
+  if ($('logMotion').checked) {
+    motion.push({
+      time:ts,speed:sample.speed,pos_x:sample.x,pos_y:sample.y,
+      pos_z:Number.isFinite(sample.z)?sample.z:null,pos_h:Number(state.pos_h)||null
     });
+    while (motion.length > 5000) motion.shift();
+  }
+  motionTimes.push(ts);
+  motionTimes = motionTimes.filter(t => ts-t < 10000);
+}
 
-    if (!keys.length) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-
-      td.colSpan = 3;
-      td.textContent = 'Waiting for game data…';
-
-      tr.appendChild(td);
-      tbody.appendChild(tr);
-      return;
-    }
-
-    // Limit rendered rows to keep the UI responsive.
-    for (const key of keys.slice(0, 300)) {
-      const tr = document.createElement('tr');
-
-      for (const value of [
-        key,
-        fmt(state[key]).slice(0, 200),
-        counts[key] || 0
-      ]) {
-        const td = document.createElement('td');
-        td.textContent = String(value);
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
-
-    if (keys.length > 300) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-
-      td.colSpan = 3;
-      td.textContent =
-        `${keys.length - 300} additional keys omitted from display`;
-
-      tr.appendChild(td);
-      tbody.appendChild(tr);
-    }
+function startTest(type) {
+  if (activeTest) {
+    $('testMessage').textContent = 'Finish or cancel the active test first.';
+    return;
+  }
+  const sample = getSample();
+  if (!sample) {
+    $('testStatus').textContent = 'No data';
+    $('testMessage').textContent = 'Waiting for numeric speed and position values.';
+    return;
+  }
+  if (type === 'acceleration' && Math.abs(sample.speed) > 0.1) {
+    $('testStatus').textContent = 'Train moving';
+    $('testMessage').textContent = 'Stop the train before starting acceleration test.';
+    return;
+  }
+  if (type === 'braking' && Math.abs(sample.speed) <= 0.1) {
+    $('testStatus').textContent = 'Train stopped';
+    $('testMessage').textContent = 'Start the braking test while the train is moving.';
+    return;
   }
 
-  // Render recent changes.
-  function renderChanges() {
-    const tbody = $('log');
-    tbody.replaceChildren();
+  activeTest = {
+    type,start:sample,last:sample,distance:0,
+    samples:[sample],stationarySamples:0
+  };
+  $('testStatus').textContent = type === 'acceleration' ? 'Accelerating…' : 'Braking…';
+  $('testMessage').textContent = type === 'acceleration'
+    ? 'Accelerate normally. Press Numpad 7 again at your chosen target speed.'
+    : 'Apply the brakes normally. The test ends after several near-zero speed samples.';
+  renderActiveTest();
+}
 
-    if (!changes.length) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
+function finishTest(cancelled = false) {
+  if (!activeTest) {
+    $('testMessage').textContent = 'No active test.';
+    return;
+  }
+  const test = activeTest;
+  activeTest = null;
 
-      td.colSpan = 4;
-      td.textContent = 'No changes yet.';
-
-      tr.appendChild(td);
-      tbody.appendChild(tr);
-      return;
-    }
-
-    for (const item of changes.slice().reverse()) {
-      const tr = document.createElement('tr');
-
-      for (const value of [
-        new Date(item.ts).toLocaleTimeString(),
-        item.key,
-        item.old,
-        item.value
-      ]) {
-        const td = document.createElement('td');
-        td.textContent = String(value);
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
+  if (cancelled) {
+    $('testStatus').textContent = 'Cancelled';
+    $('testMessage').textContent = 'The incomplete test was discarded.';
+    renderActiveTest();
+    return;
   }
 
-  // Record movement samples.
-  function recordMotion(ts) {
-    const x = Number(state.pos_x);
-    const y = Number(state.pos_y);
-    const speed = Number(state.speed);
+  const elapsed = Math.max(0,test.last.time-test.start.time)/1000;
+  const result = {
+    type:test.type,
+    startedAt:new Date(test.start.time).toISOString(),
+    startSpeed:test.start.speed,
+    endSpeed:test.last.speed,
+    elapsedSeconds:elapsed,
+    distance:test.distance,
+    samples:test.samples.slice(0,10000)
+  };
 
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  trainTests.push(result);
+  lastTestResult = result;
+  $('testStatus').textContent = 'Test saved';
+  $('testMessage').textContent = 'Saved ' + result.type + ' test.';
+  renderActiveTest();
+  renderTestResults();
+}
 
-    const signature = [x, y, speed].join('|');
+function updateTrainTest(ts) {
+  if (!activeTest) return;
+  const sample = getSample(ts);
+  if (!sample || ts <= activeTest.last.time) return;
 
-    if (signature === lastMotion) return;
+  const previous = activeTest.last;
+  activeTest.distance += distanceBetween(previous,sample);
+  activeTest.last = sample;
+  if (activeTest.samples.length < 10000) activeTest.samples.push(sample);
 
-    lastMotion = signature;
+  if (Math.abs(sample.speed) <= 0.1) activeTest.stationarySamples++;
+  else activeTest.stationarySamples = 0;
 
-    if ($('logMotion').checked) {
-      motion.push({
-        time: ts,
-        speed: Number.isFinite(speed) ? speed : null,
-        pos_x: x,
-        pos_y: y,
-        pos_z: Number(state.pos_z) || null,
-        pos_h: Number(state.pos_h) || null
+  renderActiveTest();
+
+  // Require multiple zero-speed updates to avoid finishing on one noisy sample.
+  if (activeTest.type === 'braking' && activeTest.stationarySamples >= 3) {
+    finishTest();
+  }
+}
+
+function renderActiveTest() {
+  const test = activeTest || lastTestResult;
+  if (!test) {
+    display('testTime','—');
+    display('testDistance','—');
+    display('testSpeeds','—');
+    return;
+  }
+  const elapsed = activeTest
+    ? (activeTest.last.time-activeTest.start.time)/1000
+    : test.elapsedSeconds;
+  display('testTime',elapsed.toFixed(2)+' s');
+  display('testDistance',test.distance.toFixed(2)+' units');
+  display('testSpeeds',test.startSpeed.toFixed(2)+' → '+(activeTest?activeTest.last.speed:test.endSpeed).toFixed(2));
+}
+
+function renderTestResults() {
+  const tbody = $('testResults');
+  tbody.replaceChildren();
+  if (!trainTests.length) {
+    tbody.innerHTML = '<tr><td colspan="4">No tests completed.</td></tr>';
+    return;
+  }
+  for (const test of trainTests.slice().reverse()) {
+    const tr = document.createElement('tr');
+    const values = [
+      test.type === 'acceleration' ? 'Acceleration' : 'Braking',
+      test.startSpeed.toFixed(2)+' → '+test.endSpeed.toFixed(2),
+      test.elapsedSeconds.toFixed(2)+' s',
+      test.distance.toFixed(2)
+    ];
+    for (const value of values) {
+      const td = document.createElement('td');
+      td.textContent = value;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+$('accelBtn').addEventListener('click',() => {
+  if (activeTest?.type === 'acceleration') finishTest();
+  else startTest('acceleration');
+});
+$('brakeBtn').addEventListener('click',() => startTest('braking'));
+$('cancelBtn').addEventListener('click',() => finishTest(true));
+$('clearTestsBtn').addEventListener('click',() => {
+  if (activeTest) {
+    $('testMessage').textContent = 'Cancel the active test before clearing results.';
+    return;
+  }
+  trainTests.length = 0;
+  lastTestResult = null;
+  renderTestResults();
+  renderActiveTest();
+  $('testStatus').textContent = 'Ready';
+});
+
+// These keybinds work only if the NUI webpage receives keyboard input.
+// A FiveM client Lua keybind may be needed when game focus captures the keys.
+window.addEventListener('keydown',event => {
+  if (event.code === 'Numpad7') {
+    event.preventDefault();
+    if (activeTest?.type === 'acceleration') finishTest();
+    else startTest('acceleration');
+  } else if (event.code === 'Numpad8') {
+    event.preventDefault();
+    startTest('braking');
+  } else if (event.code === 'Numpad9') {
+    event.preventDefault();
+    finishTest(true);
+  }
+});
+
+window.addEventListener('message',event => {
+  if (event.source !== window.parent) return;
+  const payload = event.data;
+  const data = payload && typeof payload === 'object' &&
+    payload.data && typeof payload.data === 'object' &&
+    !Array.isArray(payload.data) ? payload.data : null;
+  if (!data) return;
+
+  const ts = Date.now();
+  lastMessageAt = ts;
+  for (const [key,value] of Object.entries(data)) {
+    const exists = Object.prototype.hasOwnProperty.call(state,key);
+    const old = state[key];
+    state[key] = value;
+    counts[key] = (counts[key]||0)+1;
+    if ((!exists || fmt(old)!==fmt(value)) && $('logAll').checked) {
+      changes.push({
+        ts,key,
+        old:exists?fmt(old).slice(0,100):'(first value)',
+        value:fmt(value).slice(0,100)
       });
-
-      while (motion.length > 5000) {
-        motion.shift();
-      }
     }
-
-    motionTimes.push(ts);
-    motionTimes = motionTimes.filter(t => ts - t < 10000);
   }
 
-  // Receive game data.
-  window.addEventListener('message', event => {
-    if (event.source !== window.parent) return;
+  const max = Number($('maxRows').value)||300;
+  while (changes.length > max) changes.shift();
 
-    const payload = event.data;
+  recordMotion(ts);
+  updateTrainTest(ts);
+  updateSnapshot();
+  renderValues();
+  renderChanges();
+});
 
-    const data =
-      payload &&
-      typeof payload === 'object' &&
-      payload.data &&
-      typeof payload.data === 'object'
-        ? payload.data
-        : null;
+$('requestBtn').addEventListener('click',() => sendCommand('getNamedData',{keys:knownKeys}));
+$('fullBtn').addEventListener('click',() => {
+  if (confirm('Request all cached data? This may affect performance.')) sendCommand('getData');
+});
+$('clearBtn').addEventListener('click',() => {
+  changes.length=0;
+  motion.length=0;
+  lastMotion='';
+  motionTimes=[];
+  renderChanges();
+});
 
-    if (!data || Array.isArray(data)) return;
+$('copyBtn').addEventListener('click',async() => {
+  const value = fmt(state.status ?? '(No status received)');
+  try {
+    await navigator.clipboard.writeText(value);
+    $('copyBtn').textContent='Copied!';
+    setTimeout(()=>$('copyBtn').textContent='Copy status',1200);
+  } catch (_) {
+    $('status').textContent=value;
+  }
+});
 
-    const ts = Date.now();
-    lastMessageAt = ts;
+function safeValue(value,depth=0,budget={count:0},seen=new WeakSet()) {
+  if (++budget.count>5000) return '[Export limit reached]';
+  if (value===null || value===undefined) return null;
+  if (typeof value==='string') return value.length>1000?value.slice(0,1000)+'…[truncated]':value;
+  if (typeof value==='number' || typeof value==='boolean') return value;
+  if (typeof value!=='object') return String(value);
+  if (depth>=3) return '[Nested data omitted]';
+  if (seen.has(value)) return '[Circular reference]';
+  seen.add(value);
+  if (Array.isArray(value)) return value.slice(0,100).map(v=>safeValue(v,depth+1,budget,seen));
+  const result={};
+  let keys;
+  try { keys=Object.keys(value).slice(0,100); } catch (_) { return '[Unreadable object]'; }
+  for (const key of keys) {
+    try { result[key]=safeValue(value[key],depth+1,budget,seen); }
+    catch (_) { result[key]='[Unreadable value]'; }
+    if (budget.count>5000) break;
+  }
+  return result;
+}
 
-    for (const [key, value] of Object.entries(data)) {
-      const old = state[key];
+function exportData() {
+  return {
+    exportedAt:new Date().toISOString(),
+    snapshot:safeValue(state),
+    changeLog:changes.slice(-1000),
+    motionSamples:motion.slice(-2000),
+    trainTests:trainTests.slice(-100),
+    note:'Distances are 2D X/Y coordinate units. Speed units must be verified.'
+  };
+}
 
-      const exists =
-        Object.prototype.hasOwnProperty.call(state, key);
+function downloadFile(filename,content,type) {
+  let url;
+  try {
+    url=URL.createObjectURL(new Blob([content],{type}));
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    return true;
+  } catch (error) {
+    console.error('Export failed',error);
+    $('connection').textContent='Export failed';
+    if (url) try { URL.revokeObjectURL(url); } catch (_) {}
+    return false;
+  }
+}
 
-      state[key] = value;
-      counts[key] = (counts[key] || 0) + 1;
-
-      if (
-        (!exists || fmt(old) !== fmt(value)) &&
-        $('logAll').checked
-      ) {
-        changes.push({
-          ts,
-          key,
-          old: exists
-            ? fmt(old).slice(0, 100)
-            : '(first value)',
-          value: fmt(value).slice(0, 100)
-        });
-      }
-    }
-
-    const max = Number($('maxRows').value) || 300;
-
-    while (changes.length > max) {
-      changes.shift();
-    }
-
-    recordMotion(ts);
-    updateSnapshot();
-    renderValues();
-    renderChanges();
-  });
-
-  // Request selected game data.
-  $('requestBtn').addEventListener('click', () => {
-    sendCommand('getNamedData', { keys: knownKeys });
-  });
-
-  // Request the full cache only after confirmation.
-  $('fullBtn').addEventListener('click', () => {
-    if (confirm('Request all cached data? Continue?')) {
-      sendCommand('getData');
-    }
-  });
-
-  // Clear collected logs.
-  $('clearBtn').addEventListener('click', () => {
-    changes.length = 0;
-    motion.length = 0;
-    lastMotion = '';
-    motionTimes = [];
-
-    renderChanges();
-    updateSnapshot();
-  });
-
-  // Copy current status.
-  $('copyBtn').addEventListener('click', async () => {
-    const value = fmt(state.status ?? '(No status received)');
-
+function runExport(button,filename,type,build) {
+  button.disabled=true;
+  const oldText=button.textContent;
+  button.textContent='Preparing…';
+  setTimeout(() => {
     try {
-      await navigator.clipboard.writeText(value);
-
-      $('copyBtn').textContent = 'Copied!';
-
-      setTimeout(() => {
-        $('copyBtn').textContent = 'Copy status';
-      }, 1200);
-    } catch (_) {
-      $('status').textContent = value;
-    }
-  });
-
-  // Download helper with error handling.
-  function downloadFile(filename, content, type) {
-    let url;
-
-    try {
-      const blob = new Blob([content], { type });
-      url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.style.display = 'none';
-
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      // Some embedded browsers need more time before revocation.
-      setTimeout(() => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (_) {}
-      }, 10000);
-
-      return true;
+      const ok=downloadFile(filename,build(),type);
+      button.textContent=ok?'Export started!':'Export failed';
     } catch (error) {
-      console.error('Train Debugger export failed:', error);
-
-      $('connection').textContent = 'Export failed';
-
-      if (url) {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (_) {}
-      }
-
-      return false;
+      console.error(error);
+      button.textContent='Export failed';
     }
-  }
+    setTimeout(()=>{button.disabled=false;button.textContent=oldText;},2000);
+  },50);
+}
 
-  // Build a bounded, safe copy of nested game data.
-  function safeValue(
-    value,
-    depth = 0,
-    budget = { count: 0 },
-    seen = new WeakSet()
-  ) {
-    if (++budget.count > 5000) {
-      return '[Export limit reached]';
-    }
+$('exportBtn').addEventListener('click',() => runExport(
+  $('exportBtn'),'tt-train-debugger.json','application/json',
+  () => JSON.stringify(exportData())
+));
 
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (typeof value === 'string') {
-      return value.length > 1000
-        ? value.slice(0, 1000) + '…[truncated]'
-        : value;
-    }
-
-    if (
-      typeof value === 'number' ||
-      typeof value === 'boolean'
-    ) {
-      return value;
-    }
-
-    if (typeof value !== 'object') {
-      return String(value);
-    }
-
-    if (depth >= 3) {
-      return '[Nested data omitted]';
-    }
-
-    if (seen.has(value)) {
-      return '[Circular reference]';
-    }
-
-    seen.add(value);
-
-    if (Array.isArray(value)) {
-      return value.slice(0, 100).map(item =>
-        safeValue(item, depth + 1, budget, seen)
-      );
-    }
-
-    const result = {};
-
-    let keys;
-
-    try {
-      keys = Object.keys(value).slice(0, 100);
-    } catch (_) {
-      return '[Unreadable object]';
-    }
-
-    for (const key of keys) {
-      try {
-        result[key] = safeValue(
-          value[key],
-          depth + 1,
-          budget,
-          seen
-        );
-      } catch (_) {
-        result[key] = '[Unreadable value]';
-      }
-
-      if (budget.count > 5000) break;
-    }
-
-    return result;
-  }
-
-  function exportData() {
-    return {
-      exportedAt: new Date().toISOString(),
-      snapshot: safeValue(state),
-      changeLog: changes.slice(-1000),
-      motionSamples: motion.slice(-2000),
-      note: 'Export is size-limited to help prevent game freezes.'
-    };
-  }
-
-  // Let the interface update before preparing an export.
-  function runExport(button, filename, type, buildContent) {
-    button.disabled = true;
-    const oldText = button.textContent;
-
-    button.textContent = 'Preparing…';
-    $('connection').textContent = 'Preparing export…';
-
-    setTimeout(() => {
-      try {
-        const content = buildContent();
-
-        const success = downloadFile(
-          filename,
-          content,
-          type
-        );
-
-        button.textContent = success
-          ? 'Export started!'
-          : 'Export failed';
-
-        $('connection').textContent = success
-          ? 'Export requested'
-          : 'Export failed';
-      } catch (error) {
-        console.error('Train Debugger export failed:', error);
-
-        button.textContent = 'Export failed';
-        $('connection').textContent = 'Export failed';
-      }
-
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = oldText;
-      }, 2000);
-    }, 50);
-  }
-
-  // Export JSON.
-  $('exportBtn').addEventListener('click', () => {
-    runExport(
-      $('exportBtn'),
-      'tt-train-debugger.json',
-      'application/json',
-      () => JSON.stringify(exportData())
+$('exportTxtBtn').addEventListener('click',() => runExport(
+  $('exportTxtBtn'),'tt-train-debugger-log.txt','text/plain;charset=utf-8',
+  () => {
+    const data=exportData();
+    const lines=['TRANSPORT TYCOON TRAIN DEBUGGER','Exported: '+data.exportedAt,'','CURRENT DATA'];
+    for (const key of Object.keys(data.snapshot).sort()) lines.push(key+': '+fmt(data.snapshot[key]));
+    lines.push('','RECENT CHANGES');
+    for (const item of data.changeLog) lines.push(
+      new Date(item.ts).toLocaleTimeString()+' | '+item.key+' | '+item.old+' -> '+item.value
     );
-  });
+    lines.push('','MOVEMENT SAMPLES','time,speed,pos_x,pos_y,pos_z,pos_h');
+    for (const s of data.motionSamples) lines.push([
+      s.time,s.speed??'',s.pos_x,s.pos_y,s.pos_z??'',s.pos_h??''
+    ].join(','));
+    lines.push('','TRAIN TESTS',JSON.stringify(data.trainTests,null,2),data.note);
+    return lines.join('\n');
+  }
+));
 
-  // Export TXT.
-  $('exportTxtBtn').addEventListener('click', () => {
-    runExport(
-      $('exportTxtBtn'),
-      'tt-train-debugger-log.txt',
-      'text/plain;charset=utf-8',
-      () => {
-        const data = exportData();
-        const lines = [
-          'TRANSPORT TYCOON TRAIN DEBUGGER',
-          'Exported: ' + data.exportedAt,
-          '',
-          'CURRENT DATA'
-        ];
+$('exportTestsBtn').addEventListener('click',() => runExport(
+  $('exportTestsBtn'),'tt-train-test-results.json','application/json',
+  () => JSON.stringify({
+    exportedAt:new Date().toISOString(),
+    tests:trainTests
+  })
+));
 
-        for (const key of Object.keys(data.snapshot).sort()) {
-          lines.push(
-            key + ': ' + fmt(data.snapshot[key])
-          );
-        }
+$('maxRows').addEventListener('change',() => {
+  const max=Number($('maxRows').value)||300;
+  while(changes.length>max) changes.shift();
+  renderChanges();
+});
 
-        lines.push('', 'RECENT CHANGES');
-
-        for (const item of data.changeLog) {
-          lines.push(
-            new Date(item.ts).toLocaleTimeString() +
-            ' | ' + item.key +
-            ' | ' + item.old +
-            ' -> ' + item.value
-          );
-        }
-
-        lines.push(
-          '',
-          'MOVEMENT SAMPLES',
-          'time,speed,pos_x,pos_y,pos_z,pos_h'
-        );
-
-        for (const sample of data.motionSamples) {
-          lines.push([
-            sample.time,
-            sample.speed ?? '',
-            sample.pos_x,
-            sample.pos_y,
-            sample.pos_z ?? '',
-            sample.pos_h ?? ''
-          ].join(','));
-        }
-
-        lines.push('', data.note);
-
-        return lines.join('\n');
-      }
-    );
-  });
-
-  $('maxRows').addEventListener('change', () => {
-    const max = Number($('maxRows').value) || 300;
-
-    while (changes.length > max) {
-      changes.shift();
-    }
-
-    renderChanges();
-  });
-
-  // Startup request.
-  sendCommand('getNamedData', { keys: knownKeys });
-
+sendCommand('getNamedData',{keys:knownKeys});
 })();
 </script>
 </body>
