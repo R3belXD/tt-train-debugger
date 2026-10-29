@@ -1,257 +1,740 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TT Train Conductor Debugger</title>
+
 <style>
-:root{color-scheme:dark;--bg:rgba(12,13,18,.94);--panel:rgba(25,27,36,.96);--panel2:#242733;--line:#373b4a;--text:#f3f3f7;--muted:#a8adbd;--accent:#b9a5ff;--good:#91e3b0;--warn:#ffd18a;--bad:#ff9b9b}
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;background:transparent;color:var(--text);font:12px/1.35 system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
-main{position:fixed;top:8px;right:8px;width:min(330px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;margin:0;padding:0;display:grid;gap:6px;scrollbar-width:thin;scrollbar-color:#555 #181920}
-header,.panel{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px}
-header{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;cursor:move;user-select:none;position:sticky;top:0;z-index:5;box-shadow:0 2px 10px #0008}
-h1{font-size:13px;margin:0}h2{font-size:12px;margin:0 0 7px;color:var(--accent)}
-p{margin:4px 0;color:var(--muted)}.row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-button,select,input{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 7px;font:inherit}
-button{cursor:pointer}button:hover{border-color:var(--accent)}button.primary{background:#44376d;border-color:#7562b2}
-.badge{padding:3px 6px;border-radius:99px;background:#303341;color:var(--muted);font-size:10px;max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-.metric{background:var(--panel2);padding:6px;border-radius:7px;min-width:0}
-.metric label{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.04em}
-.metric strong{display:block;font-size:16px;overflow-wrap:anywhere;margin-top:2px}
-.metric small{color:var(--muted);font-size:9px}
-table{width:100%;border-collapse:collapse;font-size:11px}th,td{text-align:left;padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}th{color:var(--muted);font-weight:600}
-.scroll{max-height:220px;overflow:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#11131a;border:1px solid var(--line);border-radius:6px;padding:7px;margin:0;max-height:180px;overflow:auto;font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}
-input[type=checkbox]{accent-color:var(--accent)}.note{font-size:10px}.good{color:var(--good)}.warn{color:var(--warn)}
-body.minimized main{width:220px;max-height:none;overflow:visible}
-body.minimized main>.panel,body.minimized main>.note,body.compact main>.detail{display:none}
-body.compact main{width:min(270px,calc(100vw - 16px))}
-body.compact .metric strong{font-size:14px}
-body.compact #snapshotNote{display:none}
-@media(max-width:400px){main{width:calc(100vw - 12px);right:6px;top:6px}}
+:root {
+  color-scheme: dark;
+  --panel: rgba(20, 21, 29, 0.96);
+  --panel2: rgba(36, 39, 51, 0.97);
+  --line: #45485a;
+  --text: #f3f3f7;
+  --muted: #a8adbd;
+  --accent: #b9a5ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text);
+  font: 12px/1.35 system-ui, sans-serif;
+  overflow: hidden;
+}
+
+body {
+  background: transparent !important;
+}
+
+main {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  width: min(270px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  scrollbar-width: thin;
+}
+
+header, .panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+h1 {
+  font-size: 13px;
+  margin: 0;
+}
+
+h2 {
+  font-size: 12px;
+  margin: 0 0 7px;
+  color: var(--accent);
+}
+
+p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button, select {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 7px;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.primary {
+  background: #44376d;
+  border-color: #7562b2;
+}
+
+.badge {
+  padding: 3px 6px;
+  border-radius: 99px;
+  background: #303341;
+  color: var(--muted);
+  font-size: 10px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.metric {
+  background: var(--panel2);
+  padding: 6px;
+  border-radius: 7px;
+  min-width: 0;
+}
+
+.metric label {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.metric strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+}
+
+.metric small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+th, td {
+  text-align: left;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+th {
+  color: var(--muted);
+}
+
+.scroll {
+  max-height: 220px;
+  overflow: auto;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #11131a;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.note {
+  font-size: 10px;
+}
+
+body.compact main {
+  width: min(270px, calc(100vw - 16px));
+}
+
+body.compact .detail {
+  display: none !important;
+}
+
+body.minimized main {
+  width: 220px;
+  max-height: none;
+  overflow: visible;
+}
+
+body.minimized main > .panel,
+body.minimized main > .detail {
+  display: none !important;
+}
+
+@media (max-width: 400px) {
+  main {
+    width: calc(100vw - 12px);
+    right: 6px;
+    top: 6px;
+  }
+}
 </style>
 </head>
-<body>
+
+<body class="compact">
 <main>
-<header>
-  <div><h1>🚆 Train Debugger</h1><p>Drag this header to move the panel</p></div>
-  <div class="row"><span id="connection" class="badge">Waiting for game data</span><button id="compactBtn" title="Show or hide detail panels">Details</button><button id="minBtn" title="Minimize overlay">—</button></div>
-</header>
+  <header id="dragHeader">
+    <div>
+      <h1>🚆 Train Debugger</h1>
+      <p>Drag this header to move</p>
+    </div>
+    <div class="row">
+      <span id="connection" class="badge">Waiting for data</span>
+      <button id="compactBtn">Details</button>
+      <button id="minBtn" title="Minimize">−</button>
+    </div>
+  </header>
 
-<section class="panel">
-  <h2>Live snapshot</h2>
-  <div class="grid">
-    <div class="metric"><label>Speed (raw)</label><strong id="speed">—</strong><small>Units not assumed</small></div>
-    <div class="metric"><label>Position X</label><strong id="x">—</strong></div>
-    <div class="metric"><label>Position Y</label><strong id="y">—</strong></div>
-    <div class="metric"><label>Heading</label><strong id="heading">—</strong><small>pos_h raw value</small></div>
-    <div class="metric"><label>Vehicle</label><strong id="vehicle">—</strong></div>
-    <div class="metric"><label>Job</label><strong id="job">—</strong></div>
-    <div class="metric"><label>Zone / Street</label><strong id="zone">—</strong></div>
-    <div class="metric"><label>Update rate</label><strong id="rate">—</strong><small>position/speed updates</small></div>
-  </div>
-  <p class="note" id="snapshotNote">Values are shown as received; speed units are not assumed.</p>
-</section>
+  <section class="panel">
+    <h2>Live Train Data</h2>
+    <div class="grid">
+      <div class="metric">
+        <label>Speed (raw)</label>
+        <strong id="speed">—</strong>
+        <small>Units unconfirmed</small>
+      </div>
+      <div class="metric">
+        <label>Heading</label>
+        <strong id="heading">—</strong>
+      </div>
+      <div class="metric">
+        <label>Position X</label>
+        <strong id="x">—</strong>
+      </div>
+      <div class="metric">
+        <label>Position Y</label>
+        <strong id="y">—</strong>
+      </div>
+      <div class="metric">
+        <label>Vehicle</label>
+        <strong id="vehicle">—</strong>
+      </div>
+      <div class="metric">
+        <label>Job</label>
+        <strong id="job">—</strong>
+      </div>
+      <div class="metric">
+        <label>Zone / Street</label>
+        <strong id="zone">—</strong>
+      </div>
+      <div class="metric">
+        <label>Update rate</label>
+        <strong id="rate">—</strong>
+      </div>
+    </div>
+    <p id="snapshotNote" class="note">
+      Raw values received from the game.
+    </p>
+  </section>
 
-<section class="panel">
-  <h2>Capture controls</h2>
-  <div class="row">
-    <button class="primary" id="requestBtn">Request key data</button>
-    <button id="fullBtn">Request full cache once</button>
-    <button id="clearBtn">Clear change log</button>
-    <button id="exportBtn">Export JSON</button>
-    <button id="copyBtn">Copy status value</button>
-  </div>
-  <p class="note">Key-data request asks only for known useful cached keys. Full cache requests can affect every loaded User App, so use that button sparingly. This page listens continuously for uncached/live keys too.</p>
-  <div class="row">
-    <label><input id="logAll" type="checkbox" checked> Log all changed keys</label>
-    <label><input id="logMotion" type="checkbox" checked> Keep motion samples</label>
-    <label>Max log rows <select id="maxRows"><option>100</option><option selected>300</option><option>600</option><option>1000</option></select></label>
-  </div>
-</section>
+  <section class="panel detail">
+    <h2>Capture Controls</h2>
+    <div class="row">
+      <button class="primary" id="requestBtn">Request key data</button>
+      <button id="fullBtn">Request full cache</button>
+      <button id="clearBtn">Clear log</button>
+      <button id="exportBtn">Export JSON</button>
+      <button id="exportTxtBtn">Export TXT</button>
+      <button id="copyBtn">Copy status</button>
+    </div>
+    <p class="note">
+      Export the log and paste it into ChatGPT to help analyze
+      your train's speed, position, and braking behavior.
+    </p>
+    <div class="row">
+      <label><input id="logAll" type="checkbox" checked> Log changes</label>
+      <label><input id="logMotion" type="checkbox" checked> Record movement</label>
+      <label>Rows
+        <select id="maxRows">
+          <option>100</option>
+          <option selected>300</option>
+          <option>600</option>
+          <option>1000</option>
+        </select>
+      </label>
+    </div>
+  </section>
 
-<section class="panel">
-  <h2>Most recent values</h2>
-  <div class="scroll"><table><thead><tr><th>Key</th><th>Value</th><th>Last updated</th><th>Changes</th></tr></thead><tbody id="values"><tr><td colspan="4">Waiting for messages from the game…</td></tr></tbody></table></div>
-</section>
+  <section class="panel detail">
+    <h2>Current Data Values</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Value</th><th>Updates</th></tr>
+        </thead>
+        <tbody id="values">
+          <tr><td colspan="3">Waiting for game data…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<section class="panel">
-  <h2>Route / status details</h2>
-  <p>Expand this panel's contents after a route starts. If <code>status</code> is an object or JSON string, the debugger will show its full value here.</p>
-  <pre id="status">No status value received yet.</pre>
-</section>
+  <section class="panel detail">
+    <h2>Route / Status</h2>
+    <pre id="status">No status received yet.</pre>
+  </section>
 
-<section class="panel">
-  <h2>Recent change log</h2>
-  <div class="scroll"><table><thead><tr><th>Time</th><th>Key</th><th>Previous</th><th>New value</th></tr></thead><tbody id="log"><tr><td colspan="4">No changes received yet.</td></tr></tbody></table></div>
-</section>
-<p class="note detail">Exported logs may contain account/player identifiers. Review before sharing.</p>
+  <section class="panel detail">
+    <h2>Recent Changes</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Time</th><th>Key</th><th>Old</th><th>New</th></tr>
+        </thead>
+        <tbody id="log">
+          <tr><td colspan="4">No changes yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </main>
+
 <script>
 (() => {
   'use strict';
+
   const state = Object.create(null);
   const counts = Object.create(null);
   const changedAt = Object.create(null);
-  const log = [];
+  const changes = [];
   const motion = [];
-  let lastMotionSignature = '';
+  let lastMotion = '';
   let motionTimes = [];
   let lastMessageAt = 0;
 
   const $ = id => document.getElementById(id);
 
-  $('compactBtn').addEventListener('click', () => {
-    document.body.classList.toggle('compact');
-    $('compactBtn').textContent = document.body.classList.contains('compact') ? 'Details' : 'Compact';
-  });
-  $('minBtn').addEventListener('click', () => {
-    document.body.classList.toggle('minimized');
-    $('minBtn').textContent = document.body.classList.contains('minimized') ? '+' : '—';
-  });
-  // Drag the overlay by its header so it can be moved away from the train view.
-  const header = document.querySelector('header');
-  let dragging = false, dragX = 0, dragY = 0, startLeft = 0, startTop = 0;
-  header.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return;
-    const rect = document.querySelector('main').getBoundingClientRect();
-    dragging = true; dragX = e.clientX; dragY = e.clientY;
-    startLeft = rect.left; startTop = rect.top;
-    header.setPointerCapture(e.pointerId);
-  });
-  header.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    const main = document.querySelector('main');
-    main.style.left = Math.max(0, Math.min(window.innerWidth - main.offsetWidth, startLeft + e.clientX - dragX)) + 'px';
-    main.style.top = Math.max(0, Math.min(window.innerHeight - 36, startTop + e.clientY - dragY)) + 'px';
-    main.style.right = 'auto';
-  });
-  header.addEventListener('pointerup', () => { dragging = false; });
-  header.addEventListener('pointercancel', () => { dragging = false; });
   const knownKeys = [
-    'job','job_name','job_title','subjob','vehicle','vehicleName','vehicleClassName',
-    'speed','rpm','pos_x','pos_y','pos_z','pos_h','waypoint','waypoint_x','waypoint_y',
-    'status','notification','zone','zoneName','street','focused','pinned','tabbed',
-    'engine','fuel','exp_train_train'
+    'job', 'job_name', 'job_title', 'subjob',
+    'vehicle', 'vehicleName', 'vehicleClassName',
+    'speed', 'rpm', 'pos_x', 'pos_y', 'pos_z', 'pos_h',
+    'waypoint', 'waypoint_x', 'waypoint_y',
+    'status', 'notification', 'zone', 'zoneName', 'street',
+    'focused', 'pinned', 'tabbed', 'engine', 'fuel',
+    'exp_train_train'
   ];
-  const fmt = v => {
-    if (v === undefined) return '—';
-    if (typeof v === 'string') return v;
-    try { return JSON.stringify(v); } catch (_) { return String(v); }
-  };
-  const time = ts => new Date(ts).toLocaleTimeString();
-  const setText = (id, value) => { $(id).textContent = value == null || value === '' ? '—' : String(value); };
-  const safeValue = v => {
-    const s = fmt(v);
-    return s.length > 260 ? s.slice(0,257) + '…' : s;
-  };
+
+  function fmt(value) {
+    if (value === undefined) return '—';
+    if (typeof value === 'string') return value;
+    try {
+      return JSON.stringify(value);
+    } catch (_) {
+      return String(value);
+    }
+  }
+
+  function display(id, value) {
+    $(id).textContent =
+      value === undefined || value === null || value === ''
+        ? '—'
+        : String(value);
+  }
+
   function sendCommand(type, args = {}) {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({type, ...args}, '*');
+      window.parent.postMessage({ type, ...args }, '*');
     }
   }
-  function updateSnapshot() {
-    setText('speed', state.speed);
-    setText('x', typeof state.pos_x === 'number' ? state.pos_x.toFixed(3) : state.pos_x);
-    setText('y', typeof state.pos_y === 'number' ? state.pos_y.toFixed(3) : state.pos_y);
-    setText('heading', state.pos_h);
-    setText('vehicle', state.vehicleName || state.vehicle);
-    setText('job', state.job_title || state.job_name || state.job);
-    setText('zone', [state.zoneName || state.zone, state.street].filter(Boolean).join(' / '));
-    setText('rate', motionTimes.length > 1 ? (motionTimes.length / ((motionTimes[motionTimes.length-1]-motionTimes[0])/1000)).toFixed(1) + '/s' : '—');
-    if (state.status !== undefined) $('status').textContent = fmt(state.status);
-    $('connection').textContent = lastMessageAt ? 'Receiving game data · ' + time(lastMessageAt) : 'Waiting for game data';
-  }
-  function renderValues() {
-    const keys = Object.keys(state).sort((a,b) => {
-      const priority = k => /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(k) ? 0 : 1;
-      return priority(a)-priority(b) || a.localeCompare(b);
-    });
-    const tbody = $('values');
-    tbody.replaceChildren();
-    if (!keys.length) {
-      const tr = document.createElement('tr'), td = document.createElement('td');
-      td.colSpan=4; td.textContent='Waiting for messages from the game…'; tr.append(td); tbody.append(tr); return;
-    }
-    for (const k of keys) {
-      const tr = document.createElement('tr');
-      for (const val of [k, safeValue(state[k]), changedAt[k] ? time(changedAt[k]) : '—', counts[k] || 0]) {
-        const td = document.createElement('td'); td.textContent = String(val); tr.append(td);
-      }
-      tbody.append(tr);
-    }
-  }
-  function renderLog() {
-    const tbody = $('log'); tbody.replaceChildren();
-    if (!log.length) {
-      const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='No changes received yet.';tr.append(td);tbody.append(tr);return;
-    }
-    for (const item of log.slice().reverse()) {
-      const tr=document.createElement('tr');
-      [time(item.ts),item.key,item.old,item.value].forEach(v=>{const td=document.createElement('td');td.textContent=String(v);tr.append(td);});
-      tbody.append(tr);
-    }
-  }
-  function addLog(key, oldValue, value, ts) {
-    log.push({ts,key,old:safeValue(oldValue),value:safeValue(value)});
-    const cap = Number($('maxRows').value) || 300;
-    while(log.length>cap) log.shift();
-  }
-  function captureMotion(ts) {
-    const x=Number(state.pos_x), y=Number(state.pos_y), speed=Number(state.speed);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    const sig=[x,y,Number.isFinite(speed)?speed:''].join('|');
-    if(sig===lastMotionSignature) return;
-    lastMotionSignature=sig;
-    const sample={ts,x,y,speed:Number.isFinite(speed)?speed:null,pos_z:Number.isFinite(Number(state.pos_z))?Number(state.pos_z):null,pos_h:Number.isFinite(Number(state.pos_h))?Number(state.pos_h):null};
-    if($('logMotion').checked) {
-      motion.push(sample);
-      while(motion.length>5000) motion.shift();
-    }
-    motionTimes.push(ts);
-    motionTimes=motionTimes.filter(t=>ts-t<10000);
-  }
-  window.addEventListener('message', event => {
-    // Only accept messages posted by the parent frame, not arbitrary child/other windows.
-    if (event.source !== window.parent) return;
-    const payload = event.data;
-    const data = payload && typeof payload === 'object' && payload.data && typeof payload.data === 'object' ? payload.data : null;
-    if (!data || Array.isArray(data)) return;
-    const ts=Date.now(); lastMessageAt=ts;
-    for (const [key,value] of Object.entries(data)) {
-      const old=state[key];
-      const had=Object.prototype.hasOwnProperty.call(state,key);
-      state[key]=value;
-      counts[key]=(counts[key]||0)+1;
-      changedAt[key]=ts;
-      if (!had || fmt(old)!==fmt(value)) {
-        if($('logAll').checked) addLog(key, had?old:'(first value)', value, ts);
-      }
-    }
-    captureMotion(ts);
-    updateSnapshot(); renderValues(); renderLog();
+
+  $('compactBtn').addEventListener('click', () => {
+    document.body.classList.toggle('compact');
+    $('compactBtn').textContent =
+      document.body.classList.contains('compact')
+        ? 'Details'
+        : 'Compact';
   });
 
-  $('requestBtn').addEventListener('click', () => sendCommand('getNamedData',{keys:knownKeys}));
+  $('minBtn').addEventListener('click', () => {
+    document.body.classList.toggle('minimized');
+    $('minBtn').textContent =
+      document.body.classList.contains('minimized') ? '+' : '−';
+  });
+
+  // Drag the small overlay by its header.
+  const header = $('dragHeader');
+  let dragging = false;
+  let startX = 0, startY = 0, originX = 0, originY = 0;
+
+  header.addEventListener('pointerdown', event => {
+    if (event.target.closest('button')) return;
+
+    const rect = $('dragHeader').parentElement.getBoundingClientRect();
+    dragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+    originX = rect.left;
+    originY = rect.top;
+
+    try {
+      header.setPointerCapture(event.pointerId);
+    } catch (_) {}
+  });
+
+  header.addEventListener('pointermove', event => {
+    if (!dragging) return;
+
+    const main = document.querySelector('main');
+    const x = Math.max(
+      0,
+      Math.min(window.innerWidth - main.offsetWidth,
+        originX + event.clientX - startX)
+    );
+    const y = Math.max(
+      0,
+      Math.min(window.innerHeight - 36,
+        originY + event.clientY - startY)
+    );
+
+    main.style.left = x + 'px';
+    main.style.top = y + 'px';
+    main.style.right = 'auto';
+  });
+
+  header.addEventListener('pointerup', () => dragging = false);
+  header.addEventListener('pointercancel', () => dragging = false);
+
+  function updateSnapshot() {
+    display('speed', state.speed);
+    display('heading', state.pos_h);
+
+    display(
+      'x',
+      typeof state.pos_x === 'number'
+        ? state.pos_x.toFixed(2)
+        : state.pos_x
+    );
+
+    display(
+      'y',
+      typeof state.pos_y === 'number'
+        ? state.pos_y.toFixed(2)
+        : state.pos_y
+    );
+
+    display('vehicle', state.vehicleName || state.vehicle);
+    display('job', state.job_title || state.job_name || state.job);
+
+    display(
+      'zone',
+      [state.zoneName || state.zone, state.street]
+        .filter(Boolean).join(' / ')
+    );
+
+    const elapsed =
+      motionTimes.length > 1
+        ? (motionTimes.length /
+          ((motionTimes[motionTimes.length - 1] - motionTimes[0]) / 1000))
+        : 0;
+
+    display('rate', elapsed > 0 ? elapsed.toFixed(1) + '/s' : '—');
+
+    if (state.status !== undefined) {
+      $('status').textContent = fmt(state.status);
+    }
+
+    $('connection').textContent = lastMessageAt
+      ? 'Receiving data'
+      : 'Waiting for data';
+  }
+
+  function renderValues() {
+    const tbody = $('values');
+    tbody.replaceChildren();
+
+    const keys = Object.keys(state).sort((a, b) => {
+      const priority = key =>
+        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key)
+          ? 0 : 1;
+
+      return priority(a) - priority(b) || a.localeCompare(b);
+    });
+
+    if (!keys.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="3">Waiting for game data…</td></tr>';
+      return;
+    }
+
+    for (const key of keys) {
+      const tr = document.createElement('tr');
+
+      const values = [
+        key,
+        fmt(state[key]).slice(0, 200),
+        counts[key] || 0
+      ];
+
+      for (const value of values) {
+        const td = document.createElement('td');
+        td.textContent = String(value);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  function renderChanges() {
+    const tbody = $('log');
+    tbody.replaceChildren();
+
+    if (!changes.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="4">No changes yet.</td></tr>';
+      return;
+    }
+
+    for (const item of changes.slice().reverse()) {
+      const tr = document.createElement('tr');
+
+      for (const value of [
+        new Date(item.ts).toLocaleTimeString(),
+        item.key,
+        item.old,
+        item.value
+      ]) {
+        const td = document.createElement('td');
+        td.textContent = String(value);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  function recordMotion(ts) {
+    const x = Number(state.pos_x);
+    const y = Number(state.pos_y);
+    const speed = Number(state.speed);
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    const signature = [x, y, speed].join('|');
+    if (signature === lastMotion) return;
+    lastMotion = signature;
+
+    if ($('logMotion').checked) {
+      motion.push({
+        time: ts,
+        speed: Number.isFinite(speed) ? speed : null,
+        pos_x: x,
+        pos_y: y,
+        pos_z: Number(state.pos_z) || null,
+        pos_h: Number(state.pos_h) || null
+      });
+
+      while (motion.length > 5000) motion.shift();
+    }
+
+    motionTimes.push(ts);
+    motionTimes = motionTimes.filter(t => ts - t < 10000);
+  }
+
+  window.addEventListener('message', event => {
+    if (event.source !== window.parent) return;
+
+    const payload = event.data;
+    const data =
+      payload && typeof payload === 'object' &&
+      payload.data && typeof payload.data === 'object'
+        ? payload.data
+        : null;
+
+    if (!data || Array.isArray(data)) return;
+
+    const ts = Date.now();
+    lastMessageAt = ts;
+
+    for (const [key, value] of Object.entries(data)) {
+      const old = state[key];
+      const exists = Object.prototype.hasOwnProperty.call(state, key);
+
+      state[key] = value;
+      counts[key] = (counts[key] || 0) + 1;
+      changedAt[key] = ts;
+
+      if ((!exists || fmt(old) !== fmt(value)) && $('logAll').checked) {
+        changes.push({
+          ts,
+          key,
+          old: exists ? fmt(old).slice(0, 100) : '(first value)',
+          value: fmt(value).slice(0, 100)
+        });
+      }
+    }
+
+    const max = Number($('maxRows').value) || 300;
+    while (changes.length > max) changes.shift();
+
+    recordMotion(ts);
+    updateSnapshot();
+    renderValues();
+    renderChanges();
+  });
+
+  $('requestBtn').addEventListener('click', () => {
+    sendCommand('getNamedData', { keys: knownKeys });
+  });
+
   $('fullBtn').addEventListener('click', () => {
-    if(confirm('Request the full cached data once? This broadcasts the cache to every loaded User App. Continue?')) sendCommand('getData');
+    if (confirm('Request all cached data? Continue?')) {
+      sendCommand('getData');
+    }
   });
-  $('clearBtn').addEventListener('click', () => {log.length=0;motion.length=0;renderLog();});
+
+  $('clearBtn').addEventListener('click', () => {
+    changes.length = 0;
+    motion.length = 0;
+    renderChanges();
+  });
+
   $('copyBtn').addEventListener('click', async () => {
-    const val=fmt(state.status ?? '(status has not arrived yet)');
-    try { await navigator.clipboard.writeText(val); $('copyBtn').textContent='Copied'; setTimeout(()=>$('copyBtn').textContent='Copy status value',1200); }
-    catch (_) { const pre=$('status'); pre.textContent=val; const range=document.createRange();range.selectNodeContents(pre);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range); }
+    const value = fmt(state.status ?? '(No status received)');
+
+    try {
+      await navigator.clipboard.writeText(value);
+      $('copyBtn').textContent = 'Copied!';
+      setTimeout(() => $('copyBtn').textContent = 'Copy status', 1200);
+    } catch (_) {
+      $('status').textContent = value;
+    }
   });
+
+  function downloadFile(filename, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function exportData() {
+    return {
+      exportedAt: new Date().toISOString(),
+      snapshot: state,
+      changeLog: changes,
+      motionSamples: motion
+    };
+  }
+
   $('exportBtn').addEventListener('click', () => {
-    const exportData={exportedAt:new Date().toISOString(),snapshot:state,changeLog:log,motionSamples:motion};
-    const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='tt-train-debug-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();URL.revokeObjectURL(url);
+    downloadFile(
+      'tt-train-debugger.json',
+      JSON.stringify(exportData(), null, 2),
+      'application/json'
+    );
   });
-  $('pinBtn').addEventListener('click', () => sendCommand('pin'));
-  $('maxRows').addEventListener('change',renderLog);
-  // Request only relevant cached values at startup; uncached keys are captured by the listener.
-  sendCommand('getNamedData',{keys:knownKeys});
+
+  $('exportTxtBtn').addEventListener('click', () => {
+    const data = exportData();
+    const lines = [
+      'TRANSPORT TYCOON TRAIN DEBUGGER',
+      'Exported: ' + data.exportedAt,
+      '',
+      'CURRENT DATA'
+    ];
+
+    for (const key of Object.keys(state).sort()) {
+      lines.push(key + ': ' + fmt(state[key]));
+    }
+
+    lines.push('', 'RECENT CHANGES');
+
+    for (const item of changes) {
+      lines.push(
+        new Date(item.ts).toLocaleTimeString() +
+        ' | ' + item.key +
+        ' | ' + item.old +
+        ' -> ' + item.value
+      );
+    }
+
+    lines.push('', 'MOVEMENT SAMPLES');
+    lines.push('time,speed,pos_x,pos_y,pos_z,pos_h');
+
+    for (const sample of motion) {
+      lines.push([
+        sample.time,
+        sample.speed ?? '',
+        sample.pos_x,
+        sample.pos_y,
+        sample.pos_z ?? '',
+        sample.pos_h ?? ''
+      ].join(','));
+    }
+
+    downloadFile(
+      'tt-train-debugger-log.txt',
+      lines.join('\n'),
+      'text/plain;charset=utf-8'
+    );
+  });
+
+  $('maxRows').addEventListener('change', renderChanges);
+
+  // Ask the game for known useful cached keys.
+  sendCommand('getNamedData', { keys: knownKeys });
 })();
 </script>
 </body>
