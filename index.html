@@ -5,22 +5,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TT Train Conductor Debugger</title>
-
 <style>
 :root {
-  color-scheme: dark;
-  --panel: rgba(20, 21, 29, 0.96);
-  --panel2: rgba(36, 39, 51, 0.97);
+  --panel: rgba(20, 21, 29, .96);
+  --panel2: rgba(36, 39, 51, .97);
   --line: #45485a;
   --text: #f3f3f7;
   --muted: #a8adbd;
   --accent: #b9a5ff;
 }
-
-* {
-  box-sizing: border-box;
-}
-
+* { box-sizing: border-box; }
 html, body {
   margin: 0 !important;
   padding: 0 !important;
@@ -32,16 +26,14 @@ html, body {
   font: 12px/1.35 system-ui, sans-serif;
   overflow: hidden;
 }
-
-body {
+html, body, #app {
   background: transparent !important;
 }
-
 main {
   position: fixed;
   top: 8px;
   right: 8px;
-  width: min(270px, calc(100vw - 16px));
+  width: min(330px, calc(100vw - 16px));
   max-height: calc(100vh - 16px);
   overflow: auto;
   padding: 0;
@@ -50,14 +42,12 @@ main {
   gap: 6px;
   scrollbar-width: thin;
 }
-
 header, .panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 8px;
 }
-
 header {
   display: flex;
   align-items: center;
@@ -68,30 +58,10 @@ header {
   user-select: none;
   touch-action: none;
 }
-
-h1 {
-  font-size: 13px;
-  margin: 0;
-}
-
-h2 {
-  font-size: 12px;
-  margin: 0 0 7px;
-  color: var(--accent);
-}
-
-p {
-  margin: 4px 0;
-  color: var(--muted);
-}
-
-.row {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
+h1 { font-size: 13px; margin: 0; }
+h2 { font-size: 12px; margin: 0 0 7px; color: var(--accent); }
+p { margin: 4px 0; color: var(--muted); }
+.row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
 button, select {
   background: var(--panel2);
   color: var(--text);
@@ -100,20 +70,9 @@ button, select {
   padding: 5px 7px;
   font: inherit;
 }
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: var(--accent);
-}
-
-button.primary {
-  background: #44376d;
-  border-color: #7562b2;
-}
-
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: #44376d; border-color: #7562b2; }
 .badge {
   padding: 3px 6px;
   border-radius: 99px;
@@ -125,45 +84,16 @@ button.primary {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
 }
-
-.metric {
-  background: var(--panel2);
-  padding: 6px;
-  border-radius: 7px;
-  min-width: 0;
-}
-
-.metric label {
-  display: block;
-  color: var(--muted);
-  font-size: 9px;
-  text-transform: uppercase;
-}
-
-.metric strong {
-  display: block;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-  margin-top: 2px;
-}
-
-.metric small {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
+.metric { background: var(--panel2); padding: 6px; border-radius: 7px; min-width: 0; }
+.metric label { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; }
+.metric strong { display: block; font-size: 14px; overflow-wrap: anywhere; margin-top: 2px; }
+.metric small { color: var(--muted); font-size: 9px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th, td {
   text-align: left;
   padding: 5px 4px;
@@ -171,16 +101,8 @@ th, td {
   vertical-align: top;
   overflow-wrap: anywhere;
 }
-
-th {
-  color: var(--muted);
-}
-
-.scroll {
-  max-height: 220px;
-  overflow: auto;
-}
-
+th { color: var(--muted); }
+.scroll { max-height: 220px; overflow: auto; }
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -191,42 +113,19 @@ pre {
   max-height: 180px;
   overflow: auto;
 }
-
-.note {
-  font-size: 10px;
-}
-
-body.compact main {
-  width: min(270px, calc(100vw - 16px));
-}
-
-body.compact .detail {
-  display: none !important;
-}
-
-body.minimized main {
-  width: 220px;
-  max-height: none;
-  overflow: visible;
-}
-
+.note { font-size: 10px; }
+body.compact main { width: min(270px, calc(100vw - 16px)); }
+body.compact .detail { display: none !important; }
+body.minimized main { width: 220px; max-height: none; overflow: visible; }
 body.minimized main > .panel,
-body.minimized main > .detail {
-  display: none !important;
-}
-
+body.minimized main > .detail { display: none !important; }
 @media (max-width: 400px) {
-  main {
-    width: calc(100vw - 12px);
-    right: 6px;
-    top: 6px;
-  }
+  main { width: calc(100vw - 12px); right: 6px; top: 6px; }
 }
 </style>
 </head>
-
-<body class="compact">
-<main>
+<body>
+<main id="app">
   <header id="dragHeader">
     <div>
       <h1>🚆 Train Debugger</h1>
@@ -234,7 +133,7 @@ body.minimized main > .detail {
     </div>
     <div class="row">
       <span id="connection" class="badge">Waiting for data</span>
-      <button id="compactBtn">Details</button>
+      <button id="compactBtn">Compact</button>
       <button id="minBtn" title="Minimize">−</button>
     </div>
   </header>
@@ -242,43 +141,16 @@ body.minimized main > .detail {
   <section class="panel">
     <h2>Live Train Data</h2>
     <div class="grid">
-      <div class="metric">
-        <label>Speed (raw)</label>
-        <strong id="speed">—</strong>
-        <small>Units unconfirmed</small>
-      </div>
-      <div class="metric">
-        <label>Heading</label>
-        <strong id="heading">—</strong>
-      </div>
-      <div class="metric">
-        <label>Position X</label>
-        <strong id="x">—</strong>
-      </div>
-      <div class="metric">
-        <label>Position Y</label>
-        <strong id="y">—</strong>
-      </div>
-      <div class="metric">
-        <label>Vehicle</label>
-        <strong id="vehicle">—</strong>
-      </div>
-      <div class="metric">
-        <label>Job</label>
-        <strong id="job">—</strong>
-      </div>
-      <div class="metric">
-        <label>Zone / Street</label>
-        <strong id="zone">—</strong>
-      </div>
-      <div class="metric">
-        <label>Update rate</label>
-        <strong id="rate">—</strong>
-      </div>
+      <div class="metric"><label>Speed (raw)</label><strong id="speed">—</strong><small>Units unconfirmed</small></div>
+      <div class="metric"><label>Heading</label><strong id="heading">—</strong></div>
+      <div class="metric"><label>Position X</label><strong id="x">—</strong></div>
+      <div class="metric"><label>Position Y</label><strong id="y">—</strong></div>
+      <div class="metric"><label>Vehicle</label><strong id="vehicle">—</strong></div>
+      <div class="metric"><label>Job</label><strong id="job">—</strong></div>
+      <div class="metric"><label>Zone / Street</label><strong id="zone">—</strong></div>
+      <div class="metric"><label>Update rate</label><strong id="rate">—</strong></div>
     </div>
-    <p id="snapshotNote" class="note">
-      Raw values received from the game.
-    </p>
+    <p class="note">Raw values received from the game.</p>
   </section>
 
   <section class="panel detail">
@@ -291,19 +163,14 @@ body.minimized main > .detail {
       <button id="exportTxtBtn">Export TXT</button>
       <button id="copyBtn">Copy status</button>
     </div>
-    <p class="note">
-      Export the log and paste it into ChatGPT to help analyze
-      your train's speed, position, and braking behavior.
-    </p>
+    <p class="note">Export the log to analyze train speed, position, route data, and braking behavior.</p>
     <div class="row">
       <label><input id="logAll" type="checkbox" checked> Log changes</label>
       <label><input id="logMotion" type="checkbox" checked> Record movement</label>
       <label>Rows
         <select id="maxRows">
-          <option>100</option>
-          <option selected>300</option>
-          <option>600</option>
-          <option>1000</option>
+          <option>100</option><option selected>300</option>
+          <option>600</option><option>1000</option>
         </select>
       </label>
     </div>
@@ -313,12 +180,8 @@ body.minimized main > .detail {
     <h2>Current Data Values</h2>
     <div class="scroll">
       <table>
-        <thead>
-          <tr><th>Key</th><th>Value</th><th>Updates</th></tr>
-        </thead>
-        <tbody id="values">
-          <tr><td colspan="3">Waiting for game data…</td></tr>
-        </tbody>
+        <thead><tr><th>Key</th><th>Value</th><th>Updates</th></tr></thead>
+        <tbody id="values"><tr><td colspan="3">Waiting for game data…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -332,12 +195,8 @@ body.minimized main > .detail {
     <h2>Recent Changes</h2>
     <div class="scroll">
       <table>
-        <thead>
-          <tr><th>Time</th><th>Key</th><th>Old</th><th>New</th></tr>
-        </thead>
-        <tbody id="log">
-          <tr><td colspan="4">No changes yet.</td></tr>
-        </tbody>
+        <thead><tr><th>Time</th><th>Key</th><th>Old</th><th>New</th></tr></thead>
+        <tbody id="log"><tr><td colspan="4">No changes yet.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -349,13 +208,11 @@ body.minimized main > .detail {
 
   const state = Object.create(null);
   const counts = Object.create(null);
-  const changedAt = Object.create(null);
   const changes = [];
   const motion = [];
   let lastMotion = '';
   let motionTimes = [];
   let lastMessageAt = 0;
-
   const $ = id => document.getElementById(id);
 
   const knownKeys = [
@@ -371,18 +228,14 @@ body.minimized main > .detail {
   function fmt(value) {
     if (value === undefined) return '—';
     if (typeof value === 'string') return value;
-    try {
-      return JSON.stringify(value);
-    } catch (_) {
-      return String(value);
-    }
+    try { return JSON.stringify(value); }
+    catch (_) { return String(value); }
   }
 
   function display(id, value) {
     $(id).textContent =
       value === undefined || value === null || value === ''
-        ? '—'
-        : String(value);
+        ? '—' : String(value);
   }
 
   function sendCommand(type, args = {}) {
@@ -394,9 +247,7 @@ body.minimized main > .detail {
   $('compactBtn').addEventListener('click', () => {
     document.body.classList.toggle('compact');
     $('compactBtn').textContent =
-      document.body.classList.contains('compact')
-        ? 'Details'
-        : 'Compact';
+      document.body.classList.contains('compact') ? 'Details' : 'Compact';
   });
 
   $('minBtn').addEventListener('click', () => {
@@ -405,41 +256,32 @@ body.minimized main > .detail {
       document.body.classList.contains('minimized') ? '+' : '−';
   });
 
-  // Drag the small overlay by its header.
   const header = $('dragHeader');
   let dragging = false;
   let startX = 0, startY = 0, originX = 0, originY = 0;
 
   header.addEventListener('pointerdown', event => {
     if (event.target.closest('button')) return;
-
-    const rect = $('dragHeader').parentElement.getBoundingClientRect();
+    const rect = $('app').getBoundingClientRect();
     dragging = true;
     startX = event.clientX;
     startY = event.clientY;
     originX = rect.left;
     originY = rect.top;
-
-    try {
-      header.setPointerCapture(event.pointerId);
-    } catch (_) {}
+    try { header.setPointerCapture(event.pointerId); } catch (_) {}
   });
 
   header.addEventListener('pointermove', event => {
     if (!dragging) return;
-
-    const main = document.querySelector('main');
-    const x = Math.max(
-      0,
-      Math.min(window.innerWidth - main.offsetWidth,
-        originX + event.clientX - startX)
-    );
-    const y = Math.max(
-      0,
-      Math.min(window.innerHeight - 36,
-        originY + event.clientY - startY)
-    );
-
+    const main = $('app');
+    const x = Math.max(0, Math.min(
+      window.innerWidth - main.offsetWidth,
+      originX + event.clientX - startX
+    ));
+    const y = Math.max(0, Math.min(
+      window.innerHeight - 36,
+      originY + event.clientY - startY
+    ));
     main.style.left = x + 'px';
     main.style.top = y + 'px';
     main.style.right = 'auto';
@@ -451,45 +293,19 @@ body.minimized main > .detail {
   function updateSnapshot() {
     display('speed', state.speed);
     display('heading', state.pos_h);
-
-    display(
-      'x',
-      typeof state.pos_x === 'number'
-        ? state.pos_x.toFixed(2)
-        : state.pos_x
-    );
-
-    display(
-      'y',
-      typeof state.pos_y === 'number'
-        ? state.pos_y.toFixed(2)
-        : state.pos_y
-    );
-
+    display('x', typeof state.pos_x === 'number' ? state.pos_x.toFixed(2) : state.pos_x);
+    display('y', typeof state.pos_y === 'number' ? state.pos_y.toFixed(2) : state.pos_y);
     display('vehicle', state.vehicleName || state.vehicle);
     display('job', state.job_title || state.job_name || state.job);
+    display('zone', [state.zoneName || state.zone, state.street].filter(Boolean).join(' / '));
 
-    display(
-      'zone',
-      [state.zoneName || state.zone, state.street]
-        .filter(Boolean).join(' / ')
-    );
-
-    const elapsed =
-      motionTimes.length > 1
-        ? (motionTimes.length /
-          ((motionTimes[motionTimes.length - 1] - motionTimes[0]) / 1000))
-        : 0;
-
+    const elapsed = motionTimes.length > 1
+      ? motionTimes.length / ((motionTimes[motionTimes.length - 1] - motionTimes[0]) / 1000)
+      : 0;
     display('rate', elapsed > 0 ? elapsed.toFixed(1) + '/s' : '—');
 
-    if (state.status !== undefined) {
-      $('status').textContent = fmt(state.status);
-    }
-
-    $('connection').textContent = lastMessageAt
-      ? 'Receiving data'
-      : 'Waiting for data';
+    if (state.status !== undefined) $('status').textContent = fmt(state.status);
+    $('connection').textContent = lastMessageAt ? 'Receiving data' : 'Waiting for data';
   }
 
   function renderValues() {
@@ -498,33 +314,22 @@ body.minimized main > .detail {
 
     const keys = Object.keys(state).sort((a, b) => {
       const priority = key =>
-        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key)
-          ? 0 : 1;
-
+        /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(key) ? 0 : 1;
       return priority(a) - priority(b) || a.localeCompare(b);
     });
 
     if (!keys.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="3">Waiting for game data…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3">Waiting for game data…</td></tr>';
       return;
     }
 
     for (const key of keys) {
       const tr = document.createElement('tr');
-
-      const values = [
-        key,
-        fmt(state[key]).slice(0, 200),
-        counts[key] || 0
-      ];
-
-      for (const value of values) {
+      for (const value of [key, fmt(state[key]).slice(0, 200), counts[key] || 0]) {
         const td = document.createElement('td');
         td.textContent = String(value);
         tr.appendChild(td);
       }
-
       tbody.appendChild(tr);
     }
   }
@@ -534,25 +339,20 @@ body.minimized main > .detail {
     tbody.replaceChildren();
 
     if (!changes.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="4">No changes yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4">No changes yet.</td></tr>';
       return;
     }
 
     for (const item of changes.slice().reverse()) {
       const tr = document.createElement('tr');
-
       for (const value of [
         new Date(item.ts).toLocaleTimeString(),
-        item.key,
-        item.old,
-        item.value
+        item.key, item.old, item.value
       ]) {
         const td = document.createElement('td');
         td.textContent = String(value);
         tr.appendChild(td);
       }
-
       tbody.appendChild(tr);
     }
   }
@@ -561,7 +361,6 @@ body.minimized main > .detail {
     const x = Number(state.pos_x);
     const y = Number(state.pos_y);
     const speed = Number(state.speed);
-
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
     const signature = [x, y, speed].join('|');
@@ -577,7 +376,6 @@ body.minimized main > .detail {
         pos_z: Number(state.pos_z) || null,
         pos_h: Number(state.pos_h) || null
       });
-
       while (motion.length > 5000) motion.shift();
     }
 
@@ -587,14 +385,10 @@ body.minimized main > .detail {
 
   window.addEventListener('message', event => {
     if (event.source !== window.parent) return;
-
     const payload = event.data;
-    const data =
-      payload && typeof payload === 'object' &&
+    const data = payload && typeof payload === 'object' &&
       payload.data && typeof payload.data === 'object'
-        ? payload.data
-        : null;
-
+      ? payload.data : null;
     if (!data || Array.isArray(data)) return;
 
     const ts = Date.now();
@@ -603,15 +397,12 @@ body.minimized main > .detail {
     for (const [key, value] of Object.entries(data)) {
       const old = state[key];
       const exists = Object.prototype.hasOwnProperty.call(state, key);
-
       state[key] = value;
       counts[key] = (counts[key] || 0) + 1;
-      changedAt[key] = ts;
 
       if ((!exists || fmt(old) !== fmt(value)) && $('logAll').checked) {
         changes.push({
-          ts,
-          key,
+          ts, key,
           old: exists ? fmt(old).slice(0, 100) : '(first value)',
           value: fmt(value).slice(0, 100)
         });
@@ -620,21 +411,18 @@ body.minimized main > .detail {
 
     const max = Number($('maxRows').value) || 300;
     while (changes.length > max) changes.shift();
-
     recordMotion(ts);
     updateSnapshot();
     renderValues();
     renderChanges();
   });
 
-  $('requestBtn').addEventListener('click', () => {
-    sendCommand('getNamedData', { keys: knownKeys });
-  });
+  $('requestBtn').addEventListener('click', () =>
+    sendCommand('getNamedData', { keys: knownKeys })
+  );
 
   $('fullBtn').addEventListener('click', () => {
-    if (confirm('Request all cached data? Continue?')) {
-      sendCommand('getData');
-    }
+    if (confirm('Request all cached data? Continue?')) sendCommand('getData');
   });
 
   $('clearBtn').addEventListener('click', () => {
@@ -645,7 +433,6 @@ body.minimized main > .detail {
 
   $('copyBtn').addEventListener('click', async () => {
     const value = fmt(state.status ?? '(No status received)');
-
     try {
       await navigator.clipboard.writeText(value);
       $('copyBtn').textContent = 'Copied!';
@@ -659,13 +446,11 @@ body.minimized main > .detail {
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
-
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
@@ -703,24 +488,17 @@ body.minimized main > .detail {
 
     for (const item of changes) {
       lines.push(
-        new Date(item.ts).toLocaleTimeString() +
-        ' | ' + item.key +
-        ' | ' + item.old +
-        ' -> ' + item.value
+        new Date(item.ts).toLocaleTimeString() + ' | ' +
+        item.key + ' | ' + item.old + ' -> ' + item.value
       );
     }
 
-    lines.push('', 'MOVEMENT SAMPLES');
-    lines.push('time,speed,pos_x,pos_y,pos_z,pos_h');
+    lines.push('', 'MOVEMENT SAMPLES', 'time,speed,pos_x,pos_y,pos_z,pos_h');
 
     for (const sample of motion) {
       lines.push([
-        sample.time,
-        sample.speed ?? '',
-        sample.pos_x,
-        sample.pos_y,
-        sample.pos_z ?? '',
-        sample.pos_h ?? ''
+        sample.time, sample.speed ?? '', sample.pos_x, sample.pos_y,
+        sample.pos_z ?? '', sample.pos_h ?? ''
       ].join(','));
     }
 
@@ -733,7 +511,7 @@ body.minimized main > .detail {
 
   $('maxRows').addEventListener('change', renderChanges);
 
-  // Ask the game for known useful cached keys.
+  // Startup request; no missing pinBtn reference.
   sendCommand('getNamedData', { keys: knownKeys });
 })();
 </script>
