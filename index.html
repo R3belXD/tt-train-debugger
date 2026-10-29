@@ -438,18 +438,34 @@ function updateTrainTest(ts) {
 
 function renderActiveTest() {
   const test = activeTest || lastTestResult;
+
   if (!test) {
-    display('testTime','—');
-    display('testDistance','—');
-    display('testSpeeds','—');
+    display('testTime', '—');
+    display('testDistance', '—');
+    display('testSpeeds', '—');
     return;
   }
-  const elapsed = activeTest
-    ? (activeTest.last.time-activeTest.start.time)/1000
+
+  const isActive = Boolean(activeTest);
+
+  const elapsed = isActive
+    ? Math.max(0, test.last.time - test.start.time) / 1000
     : test.elapsedSeconds;
-  display('testTime',elapsed.toFixed(2)+' s');
-  display('testDistance',test.distance.toFixed(2)+' units');
-  display('testSpeeds',test.startSpeed.toFixed(2)+' → '+(activeTest?activeTest.last.speed:test.endSpeed).toFixed(2));
+
+  const startSpeed = isActive
+    ? test.start.speed
+    : test.startSpeed;
+
+  const endSpeed = isActive
+    ? test.last.speed
+    : test.endSpeed;
+
+  display('testTime', elapsed.toFixed(2) + ' s');
+  display('testDistance', test.distance.toFixed(2) + ' units');
+  display(
+    'testSpeeds',
+    startSpeed.toFixed(2) + ' → ' + endSpeed.toFixed(2)
+  );
 }
 
 function renderTestResults() {
