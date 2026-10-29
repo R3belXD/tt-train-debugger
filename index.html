@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TT Train Conductor Debugger</title>
+<style>
+:root{color-scheme:dark;--bg:#101116;--panel:#1b1d26;--panel2:#242733;--line:#373b4a;--text:#f3f3f7;--muted:#a8adbd;--accent:#b9a5ff;--good:#91e3b0;--warn:#ffd18a;--bad:#ff9b9b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1100px;margin:auto;padding:14px;display:grid;gap:12px}
+header,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{font-size:18px;margin:0}h2{font-size:14px;margin:0 0 10px;color:var(--accent)}
+p{margin:5px 0;color:var(--muted)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,select,input{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--accent)}button.primary{background:#44376d;border-color:#7562b2}
+.badge{padding:4px 8px;border-radius:99px;background:#303341;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.metric{background:var(--panel2);padding:10px;border-radius:9px;min-width:0}
+.metric label{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.metric strong{display:block;font-size:20px;overflow-wrap:anywhere;margin-top:3px}
+.metric small{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}th{color:var(--muted);font-weight:600}
+.scroll{max-height:340px;overflow:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#11131a;border:1px solid var(--line);border-radius:8px;padding:10px;margin:0;max-height:280px;overflow:auto;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}
+input[type=checkbox]{accent-color:var(--accent)}.note{font-size:12px}.good{color:var(--good)}.warn{color:var(--warn)}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:8px}header,.panel{padding:10px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div><h1>🚆 TT Train Conductor Debugger</h1><p>Live User App data inspector · no API key needed</p></div>
+  <div class="row"><span id="connection" class="badge">Waiting for game data</span><button id="pinBtn">Pin app</button></div>
+</header>
+
+<section class="panel">
+  <h2>Live snapshot</h2>
+  <div class="grid">
+    <div class="metric"><label>Speed (raw)</label><strong id="speed">—</strong><small>Units not assumed</small></div>
+    <div class="metric"><label>Position X</label><strong id="x">—</strong></div>
+    <div class="metric"><label>Position Y</label><strong id="y">—</strong></div>
+    <div class="metric"><label>Heading</label><strong id="heading">—</strong><small>pos_h raw value</small></div>
+    <div class="metric"><label>Vehicle</label><strong id="vehicle">—</strong></div>
+    <div class="metric"><label>Job</label><strong id="job">—</strong></div>
+    <div class="metric"><label>Zone / Street</label><strong id="zone">—</strong></div>
+    <div class="metric"><label>Update rate</label><strong id="rate">—</strong><small>position/speed updates</small></div>
+  </div>
+  <p class="note">Values are shown as received. This debugger does not assume speed units or invent destination coordinates.</p>
+</section>
+
+<section class="panel">
+  <h2>Capture controls</h2>
+  <div class="row">
+    <button class="primary" id="requestBtn">Request key data</button>
+    <button id="fullBtn">Request full cache once</button>
+    <button id="clearBtn">Clear change log</button>
+    <button id="exportBtn">Export JSON</button>
+    <button id="copyBtn">Copy status value</button>
+  </div>
+  <p class="note">Key-data request asks only for known useful cached keys. Full cache requests can affect every loaded User App, so use that button sparingly. This page listens continuously for uncached/live keys too.</p>
+  <div class="row">
+    <label><input id="logAll" type="checkbox" checked> Log all changed keys</label>
+    <label><input id="logMotion" type="checkbox" checked> Keep motion samples</label>
+    <label>Max log rows <select id="maxRows"><option>100</option><option selected>300</option><option>600</option><option>1000</option></select></label>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Most recent values</h2>
+  <div class="scroll"><table><thead><tr><th>Key</th><th>Value</th><th>Last updated</th><th>Changes</th></tr></thead><tbody id="values"><tr><td colspan="4">Waiting for messages from the game…</td></tr></tbody></table></div>
+</section>
+
+<section class="panel">
+  <h2>Route / status details</h2>
+  <p>Expand this panel's contents after a route starts. If <code>status</code> is an object or JSON string, the debugger will show its full value here.</p>
+  <pre id="status">No status value received yet.</pre>
+</section>
+
+<section class="panel">
+  <h2>Recent change log</h2>
+  <div class="scroll"><table><thead><tr><th>Time</th><th>Key</th><th>Previous</th><th>New value</th></tr></thead><tbody id="log"><tr><td colspan="4">No changes received yet.</td></tr></tbody></table></div>
+</section>
+<p class="note">Privacy: exported logs may contain player identifiers, account identifiers, or API-key fields supplied by the game. Review the JSON before sharing it; this app does not send your data to a server.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const state = Object.create(null);
+  const counts = Object.create(null);
+  const changedAt = Object.create(null);
+  const log = [];
+  const motion = [];
+  let lastMotionSignature = '';
+  let motionTimes = [];
+  let lastMessageAt = 0;
+
+  const $ = id => document.getElementById(id);
+  const knownKeys = [
+    'job','job_name','job_title','subjob','vehicle','vehicleName','vehicleClassName',
+    'speed','rpm','pos_x','pos_y','pos_z','pos_h','waypoint','waypoint_x','waypoint_y',
+    'status','notification','zone','zoneName','street','focused','pinned','tabbed',
+    'engine','fuel','exp_train_train'
+  ];
+  const fmt = v => {
+    if (v === undefined) return '—';
+    if (typeof v === 'string') return v;
+    try { return JSON.stringify(v); } catch (_) { return String(v); }
+  };
+  const time = ts => new Date(ts).toLocaleTimeString();
+  const setText = (id, value) => { $(id).textContent = value == null || value === '' ? '—' : String(value); };
+  const safeValue = v => {
+    const s = fmt(v);
+    return s.length > 260 ? s.slice(0,257) + '…' : s;
+  };
+  function sendCommand(type, args = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({type, ...args}, '*');
+    }
+  }
+  function updateSnapshot() {
+    setText('speed', state.speed);
+    setText('x', typeof state.pos_x === 'number' ? state.pos_x.toFixed(3) : state.pos_x);
+    setText('y', typeof state.pos_y === 'number' ? state.pos_y.toFixed(3) : state.pos_y);
+    setText('heading', state.pos_h);
+    setText('vehicle', state.vehicleName || state.vehicle);
+    setText('job', state.job_title || state.job_name || state.job);
+    setText('zone', [state.zoneName || state.zone, state.street].filter(Boolean).join(' / '));
+    setText('rate', motionTimes.length > 1 ? (motionTimes.length / ((motionTimes[motionTimes.length-1]-motionTimes[0])/1000)).toFixed(1) + '/s' : '—');
+    if (state.status !== undefined) $('status').textContent = fmt(state.status);
+    $('connection').textContent = lastMessageAt ? 'Receiving game data · ' + time(lastMessageAt) : 'Waiting for game data';
+  }
+  function renderValues() {
+    const keys = Object.keys(state).sort((a,b) => {
+      const priority = k => /^(status|speed|pos_|waypoint|vehicle|job|trigger_|temp_)/.test(k) ? 0 : 1;
+      return priority(a)-priority(b) || a.localeCompare(b);
+    });
+    const tbody = $('values');
+    tbody.replaceChildren();
+    if (!keys.length) {
+      const tr = document.createElement('tr'), td = document.createElement('td');
+      td.colSpan=4; td.textContent='Waiting for messages from the game…'; tr.append(td); tbody.append(tr); return;
+    }
+    for (const k of keys) {
+      const tr = document.createElement('tr');
+      for (const val of [k, safeValue(state[k]), changedAt[k] ? time(changedAt[k]) : '—', counts[k] || 0]) {
+        const td = document.createElement('td'); td.textContent = String(val); tr.append(td);
+      }
+      tbody.append(tr);
+    }
+  }
+  function renderLog() {
+    const tbody = $('log'); tbody.replaceChildren();
+    if (!log.length) {
+      const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='No changes received yet.';tr.append(td);tbody.append(tr);return;
+    }
+    for (const item of log.slice().reverse()) {
+      const tr=document.createElement('tr');
+      [time(item.ts),item.key,item.old,item.value].forEach(v=>{const td=document.createElement('td');td.textContent=String(v);tr.append(td);});
+      tbody.append(tr);
+    }
+  }
+  function addLog(key, oldValue, value, ts) {
+    log.push({ts,key,old:safeValue(oldValue),value:safeValue(value)});
+    const cap = Number($('maxRows').value) || 300;
+    while(log.length>cap) log.shift();
+  }
+  function captureMotion(ts) {
+    const x=Number(state.pos_x), y=Number(state.pos_y), speed=Number(state.speed);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    const sig=[x,y,Number.isFinite(speed)?speed:''].join('|');
+    if(sig===lastMotionSignature) return;
+    lastMotionSignature=sig;
+    const sample={ts,x,y,speed:Number.isFinite(speed)?speed:null,pos_z:Number.isFinite(Number(state.pos_z))?Number(state.pos_z):null,pos_h:Number.isFinite(Number(state.pos_h))?Number(state.pos_h):null};
+    if($('logMotion').checked) {
+      motion.push(sample);
+      while(motion.length>5000) motion.shift();
+    }
+    motionTimes.push(ts);
+    motionTimes=motionTimes.filter(t=>ts-t<10000);
+  }
+  window.addEventListener('message', event => {
+    // Only accept messages posted by the parent frame, not arbitrary child/other windows.
+    if (event.source !== window.parent) return;
+    const payload = event.data;
+    const data = payload && typeof payload === 'object' && payload.data && typeof payload.data === 'object' ? payload.data : null;
+    if (!data || Array.isArray(data)) return;
+    const ts=Date.now(); lastMessageAt=ts;
+    for (const [key,value] of Object.entries(data)) {
+      const old=state[key];
+      const had=Object.prototype.hasOwnProperty.call(state,key);
+      state[key]=value;
+      counts[key]=(counts[key]||0)+1;
+      changedAt[key]=ts;
+      if (!had || fmt(old)!==fmt(value)) {
+        if($('logAll').checked) addLog(key, had?old:'(first value)', value, ts);
+      }
+    }
+    captureMotion(ts);
+    updateSnapshot(); renderValues(); renderLog();
+  });
+
+  $('requestBtn').addEventListener('click', () => sendCommand('getNamedData',{keys:knownKeys}));
+  $('fullBtn').addEventListener('click', () => {
+    if(confirm('Request the full cached data once? This broadcasts the cache to every loaded User App. Continue?')) sendCommand('getData');
+  });
+  $('clearBtn').addEventListener('click', () => {log.length=0;motion.length=0;renderLog();});
+  $('copyBtn').addEventListener('click', async () => {
+    const val=fmt(state.status ?? '(status has not arrived yet)');
+    try { await navigator.clipboard.writeText(val); $('copyBtn').textContent='Copied'; setTimeout(()=>$('copyBtn').textContent='Copy status value',1200); }
+    catch (_) { const pre=$('status'); pre.textContent=val; const range=document.createRange();range.selectNodeContents(pre);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range); }
+  });
+  $('exportBtn').addEventListener('click', () => {
+    const exportData={exportedAt:new Date().toISOString(),snapshot:state,changeLog:log,motionSamples:motion};
+    const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='tt-train-debug-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();URL.revokeObjectURL(url);
+  });
+  $('pinBtn').addEventListener('click', () => sendCommand('pin'));
+  $('maxRows').addEventListener('change',renderLog);
+  // Request only relevant cached values at startup; uncached keys are captured by the listener.
+  sendCommand('getNamedData',{keys:knownKeys});
+})();
+</script>
+</body>
+</html>
